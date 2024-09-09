@@ -1,0 +1,12 @@
+services:
+  # DATABASE_URL=postgres://postgres:postgres@localhost:5432/postgres
+  postgres:
+    image: postgres:12
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - ./data:/var/lib/postgresql/data
