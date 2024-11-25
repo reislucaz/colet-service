@@ -41,20 +41,19 @@ export class ProductService {
       : {};
 
     if (query.category) {
-      where.categories = {
-        some: {
-          id: query.category,
-        },
-      };
+      where.categoryId = query.category;
     }
 
     const [products, total] = await Promise.all([
       this.prisma.product.findMany({
         where,
         skip,
+        orderBy: {
+          createdAt: 'desc',
+        },
         take: limit,
         include: {
-          categories: {
+          category: {
             select: {
               id: true,
               name: true,
@@ -72,6 +71,16 @@ export class ProductService {
   async getProduct(anId: string) {
     return this.prisma.product.findUnique({
       where: { id: anId },
+      include: {
+        category: {
+          select: {
+            id: true,
+            name: true,
+            iconKey: true,
+          },
+        },
+        images: true,
+      },
     });
   }
 }

@@ -1,6 +1,5 @@
 import { Prisma } from '@prisma/client';
 import {
-  ArrayMinSize,
   IsBoolean,
   IsNotEmpty,
   IsOptional,
@@ -34,13 +33,12 @@ export class CreateProductDto {
   recurring: boolean = false;
 
   @IsString({
-    message: 'Cada categoria deve ser um texto',
-    each: true,
+    message: 'Categoria deve ser um texto',
   })
-  @ArrayMinSize(1, {
-    message: 'Deve haver pelo menos uma categoria',
+  @IsNotEmpty({
+    message: 'Deve haver uma categoria',
   })
-  categories: string[];
+  category: string;
 
   //   author info
 
@@ -105,8 +103,10 @@ export class CreateProductDto {
       authorName: this.author_name,
       authorEmail: this.author_email,
       authorPhone: this.author_phone,
-      categories: {
-        connect: this.categories.map((id) => ({ id })),
+      category: {
+        connect: {
+          id: this.category,
+        },
       },
     };
   }

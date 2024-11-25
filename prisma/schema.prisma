@@ -46,7 +46,9 @@ model Product {
 
   recurring Boolean @default(false)
 
-  categories Category[]
+  category Category @relation(fields: [categoryId], references: [id])
+
+  categoryId String @map("category_id")
 
   images    Image[]
 
