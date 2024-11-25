@@ -13,8 +13,6 @@ model User {
   email     String   @unique
   passwordHash  String  @map("password_hash")
 
-  products Product[]
-
   messagesSent Message[] @relation(name: "from_user")
   messagesReceived   Message[] @relation(name: "to_user")
 
@@ -26,13 +24,12 @@ model Category {
   id        String   @id @default(cuid())
 
   name      String
+  
   description String
 
   products Product[]
 
-  image     Image? @relation(fields: [imageId], references: [id])
-
-  imageId   String? @map("image_id") @unique
+  iconKey String @map("icon_key")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -51,11 +48,19 @@ model Product {
 
   categories Category[]
 
-  authorId  String @map("author_id")
-
-  author    User @relation(fields: [authorId], references: [id])
-
   images    Image[]
+
+  // for while, we will not have a user for each product
+  
+  authorName String @map("author_name")
+  authorEmail String @map("author_email")
+  authorPhone String @map("author_phone")
+
+  // address
+
+  neighborhood String
+  city String
+  state String
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -69,8 +74,6 @@ model Image {
   productId String @map("product_id")
 
   product   Product @relation(fields: [productId], references: [id])
-
-  category Category?
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")

@@ -12,6 +12,7 @@ import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { SearchQuery } from 'src/utils/search-query';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import { Public } from 'src/utils/decorators/public';
 
 @Controller('categories')
 export class CategoryController {
@@ -25,6 +26,7 @@ export class CategoryController {
   }
 
   @Get()
+  @Public()
   async listCategories(@Query() query: SearchQuery) {
     return await this.categoryService.listCategories(query);
   }

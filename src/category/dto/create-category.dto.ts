@@ -1,5 +1,5 @@
 import { Prisma } from '@prisma/client';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateCategoryDto {
   @IsString({
@@ -19,22 +19,18 @@ export class CreateCategoryDto {
   description: string;
 
   @IsString({
-    message: 'ID da imagem deve ser um texto',
+    message: 'Chave do ícone deve ser um texto',
   })
-  @IsOptional()
-  image_id?: string;
+  @IsNotEmpty({
+    message: 'Chave do ícone é obrigatória',
+  })
+  icon_key: string;
 
   toCreateEntity(): Prisma.CategoryCreateInput {
     return {
       name: this.name,
       description: this.description,
-      image: this.image_id
-        ? {
-            connect: {
-              id: this.image_id,
-            },
-          }
-        : undefined,
+      iconKey: this.icon_key,
     };
   }
 }

@@ -1,0 +1,77 @@
+import { Injectable } from '@nestjs/common';
+import { Prisma, Product } from '@prisma/client';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { Pagination } from 'src/utils/pagination';
+import { ProductQuery } from './query/product-query';
+
+@Injectable()
+export class ProductService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async createProduct(data: Prisma.ProductCreateInput) {
+    return this.prisma.product.create({
+      data,
+    });
+  }
+
+  async updateProduct(anId: string, data: Prisma.ProductUpdateInput) {
+    return this.prisma.product.update({
+      where: { id: anId },
+      data,
+    });
+  }
+
+  async deleteProduct(anId: string) {
+    return this.prisma.product.delete({
+      where: { id: anId },
+    });
+  }
+
+  async listProducts(query: ProductQuery): Promise<Pagination<Product>> {
+    const { page, limit, q } = query;
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.ProductWhereInput = q
+      ? {
+          OR: [
+            { name: { contains: q, mode: 'insensitive' } },
+            { description: { contains: q, mode: 'insensitive' } },
+          ],
+        }
+      : {};
+
+    if (query.category) {
+      where.categories = {
+        some: {
+          id: query.category,
+        },
+      };
+    }
+
+    const [products, total] = await Promise.all([
+      this.prisma.product.findMany({
+        where,
+        skip,
+        take: limit,
+        include: {
+          categories: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          images: true,
+        },
+      }),
+      this.prisma.product.count({ where }),
+    ]);
+
+    return new Pagination(products, total, page, limit);
+  }
+
+  async getProduct(anId: string) {
+    return this.prisma.product.findUnique({
+      where: { id: anId },
+    });
+  }
+}

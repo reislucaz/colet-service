@@ -5,6 +5,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './auth/auth.guard';
 import { CategoryModule } from './category/category.module';
+import { ProductModule } from './product/product.module';
 
 @Module({
   providers: [
@@ -13,6 +14,12 @@ import { CategoryModule } from './category/category.module';
       useClass: AuthGuard,
     },
   ],
-  imports: [UserModule, AuthModule, PrismaModule, CategoryModule],
+  imports: [
+    UserModule,
+    AuthModule,
+    PrismaModule,
+    CategoryModule,
+    ProductModule,
+  ],
 })
 export class AppModule {}

@@ -19,22 +19,16 @@ export class UpdateCategoryDto {
   description: string;
 
   @IsString({
-    message: 'ID da imagem deve ser um texto',
+    message: 'Chave do ícone',
   })
   @IsOptional()
-  image_id?: string;
+  icon_key?: string;
 
   toUpdateEntity(): Prisma.CategoryUpdateInput {
     return {
       name: this.name,
       description: this.description,
-      image: this.image_id
-        ? {
-            connect: {
-              id: this.image_id,
-            },
-          }
-        : undefined,
+      iconKey: this.icon_key ?? undefined,
     };
   }
 }
