@@ -293,7 +293,7 @@ export class OfferService {
     });
 
     // Create a system message about the payment
-    const message = await this.prisma.message.create({
+    await this.prisma.message.create({
       data: {
         text: `Pagamento de R$ ${offer.amount.toFixed(
           2,
