@@ -8,23 +8,29 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  name      String
-  email     String   @unique
-  passwordHash  String  @map("password_hash")
+  id           String @id @default(cuid())
+  name         String
+  email        String @unique
+  passwordHash String @map("password_hash")
 
-  messagesSent Message[] @relation(name: "from_user")
-  messagesReceived   Message[] @relation(name: "to_user")
+  messagesSent     Message[] @relation(name: "from_user")
+  messagesReceived Message[] @relation(name: "to_user")
+
+  chats          Chat[]  @relation("user_chats")
+  offers         Offer[] @relation("user_offers")
+  receivedOffers Offer[] @relation("recipient_offers")
+
+  stripeCustomerId String? @map("stripe_customer_id")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 }
 
 model Category {
-  id        String   @id @default(cuid())
+  id String @id @default(cuid())
 
-  name      String
-  
+  name String
+
   description String
 
   products Product[]
@@ -36,13 +42,13 @@ model Category {
 }
 
 model Product {
-  id        String   @id @default(cuid())
-  
-  name      String
+  id String @id @default(cuid())
+
+  name String
 
   description String
 
-  price     Float?
+  price Float?
 
   recurring Boolean @default(false)
 
@@ -50,50 +56,98 @@ model Product {
 
   categoryId String @map("category_id")
 
-  images    Image[]
+  images Image[]
 
   // for while, we will not have a user for each product
-  
-  authorName String @map("author_name")
+
+  authorName  String @map("author_name")
   authorEmail String @map("author_email")
   authorPhone String @map("author_phone")
 
   // address
 
   neighborhood String
-  city String
-  state String
+  city         String
+  state        String
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  Chat      Chat[]
 }
 
 model Image {
-  id        String   @id @default(cuid())
+  id String @id @default(cuid())
 
-  key      String
+  key String
 
   productId String @map("product_id")
 
-  product   Product @relation(fields: [productId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 }
 
 model Message {
-  id        String   @id @default(cuid())
+  id String @id @default(cuid())
 
-  text      String
+  text String
 
-  fromUser  User @relation(name: "from_user", fields: [fromUserId], references: [id])
-
+  fromUser   User   @relation(name: "from_user", fields: [fromUserId], references: [id])
   fromUserId String @map("from_user_id")
 
-  toUser    User @relation(name: "to_user", fields: [toUserId], references: [id])
+  toUser   User   @relation(name: "to_user", fields: [toUserId], references: [id])
+  toUserId String @map("to_user_id")
 
-  toUserId  String @map("to_user_id")
-  
+  chat   Chat   @relation(fields: [chatId], references: [id])
+  chatId String @map("chat_id")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+}
+
+model Chat {
+  id String @id @default(cuid())
+
+  product   Product @relation(fields: [productId], references: [id])
+  productId String  @map("product_id")
+
+  participants User[] @relation("user_chats")
+
+  messages Message[]
+
+  offers Offer[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+}
+
+model Offer {
+  id String @id @default(cuid())
+
+  amount Float
+
+  status OfferStatus @default(PENDING)
+
+  sender   User   @relation("user_offers", fields: [senderId], references: [id])
+  senderId String @map("sender_id")
+
+  recipient   User   @relation("recipient_offers", fields: [recipientId], references: [id])
+  recipientId String @map("recipient_id")
+
+  chat   Chat   @relation(fields: [chatId], references: [id])
+  chatId String @map("chat_id")
+
+  stripePaymentIntentId String? @map("stripe_payment_intent_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+}
+
+enum OfferStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  PAID
+  CANCELLED
 }
