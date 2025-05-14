@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { MessageService } from './message.service';
 import { MessageController } from './message.controller';
 import { PrismaModule } from '../prisma/prisma.module';
@@ -13,10 +13,10 @@ import { AuthModule } from '../auth/auth.module';
       secret: process.env.JWT_SECRET || 'secret',
       signOptions: { expiresIn: '1d' },
     }),
-    AuthModule,
+    forwardRef(() => AuthModule),
   ],
   controllers: [MessageController],
   providers: [MessageService, MessageGateway],
-  exports: [MessageService],
+  exports: [MessageService, MessageGateway],
 })
 export class MessageModule {}
