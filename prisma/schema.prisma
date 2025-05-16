@@ -16,9 +16,10 @@ model User {
   messagesSent     Message[] @relation(name: "from_user")
   messagesReceived Message[] @relation(name: "to_user")
 
-  chats          Chat[]  @relation("user_chats")
-  offers         Offer[] @relation("user_offers")
-  receivedOffers Offer[] @relation("recipient_offers")
+  chats          Chat[]    @relation("user_chats")
+  offers         Offer[]   @relation("user_offers")
+  receivedOffers Offer[]   @relation("recipient_offers")
+  products       Product[]
 
   stripeCustomerId String? @map("stripe_customer_id")
 
@@ -58,13 +59,8 @@ model Product {
 
   images Image[]
 
-  // for while, we will not have a user for each product
-
-  authorName  String @map("author_name")
-  authorEmail String @map("author_email")
-  authorPhone String @map("author_phone")
-
-  // address
+  author   User   @relation(fields: [authorId], references: [id])
+  authorId String @map("author_id")
 
   neighborhood String
   city         String

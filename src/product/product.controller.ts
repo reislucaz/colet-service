@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  Request,
+} from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { Public } from 'src/utils/decorators/public';
@@ -9,15 +17,21 @@ export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
   @Post()
-  @Public()
-  async createProduct(@Body() data: CreateProductDto) {
-    return await this.productService.createProduct(data.toCreateEntity());
+  async createProduct(@Body() data: CreateProductDto, @Request() req) {
+    return await this.productService.createProduct(
+      data.toCreateEntity(req.user.id),
+    );
   }
 
   @Get()
   @Public()
   async listProducts(@Query() query: ProductQuery) {
     return await this.productService.listProducts(query);
+  }
+
+  @Get('/my-products')
+  async listMyProducts(@Request() req, @Query() query: ProductQuery) {
+    return await this.productService.listUserProducts(req.user.id, query);
   }
 
   @Get('/:id')

@@ -11,6 +11,23 @@ export class ProductService {
   async createProduct(data: Prisma.ProductCreateInput) {
     return this.prisma.product.create({
       data,
+      include: {
+        category: {
+          select: {
+            id: true,
+            name: true,
+            iconKey: true,
+          },
+        },
+        images: true,
+        author: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
     });
   }
 
@@ -60,6 +77,60 @@ export class ProductService {
             },
           },
           images: true,
+          author: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+      }),
+      this.prisma.product.count({ where }),
+    ]);
+
+    return new Pagination(products, total, page, limit);
+  }
+
+  async listUserProducts(
+    userId: string,
+    query: ProductQuery,
+  ): Promise<Pagination<Product>> {
+    const { page, limit, q } = query;
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.ProductWhereInput = {
+      authorId: userId,
+      ...(q
+        ? {
+            OR: [
+              { name: { contains: q, mode: 'insensitive' } },
+              { description: { contains: q, mode: 'insensitive' } },
+            ],
+          }
+        : {}),
+    };
+
+    if (query.category) {
+      where.categoryId = query.category;
+    }
+
+    const [products, total] = await Promise.all([
+      this.prisma.product.findMany({
+        where,
+        skip,
+        orderBy: {
+          createdAt: 'desc',
+        },
+        take: limit,
+        include: {
+          category: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          images: true,
         },
       }),
       this.prisma.product.count({ where }),
@@ -80,6 +151,13 @@ export class ProductService {
           },
         },
         images: true,
+        author: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
       },
     });
   }

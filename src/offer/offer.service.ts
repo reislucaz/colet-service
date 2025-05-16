@@ -48,7 +48,7 @@ export class OfferService {
 
     // Determine recipient (product owner)
     const recipient = chat.participants.find(
-      (p) => p.id !== userId && p.email === chat.product.authorEmail,
+      (p) => p.id !== userId && p.id === chat.product.authorId,
     );
 
     if (!recipient) {

@@ -40,32 +40,6 @@ export class CreateProductDto {
   })
   category: string;
 
-  //   author info
-
-  @IsString({
-    message: 'Nome do autor deve ser um texto',
-  })
-  @IsNotEmpty({
-    message: 'Nome do autor é obrigatório',
-  })
-  author_name: string;
-
-  @IsString({
-    message: 'Email do autor deve ser um texto',
-  })
-  @IsNotEmpty({
-    message: 'Email do autor é obrigatório',
-  })
-  author_email: string;
-
-  @IsString({
-    message: 'Telefone do autor deve ser um texto',
-  })
-  @IsNotEmpty({
-    message: 'Telefone do autor é obrigatório',
-  })
-  author_phone: string;
-
   //  endereço
   @IsString({
     message: 'Bairro deve ser um texto',
@@ -91,7 +65,7 @@ export class CreateProductDto {
   })
   state: string;
 
-  toCreateEntity(): Prisma.ProductCreateInput {
+  toCreateEntity(authorId: string): Prisma.ProductCreateInput {
     return {
       name: this.name,
       description: this.description,
@@ -100,9 +74,11 @@ export class CreateProductDto {
       neighborhood: this.neighborhood,
       city: this.city,
       state: this.state,
-      authorName: this.author_name,
-      authorEmail: this.author_email,
-      authorPhone: this.author_phone,
+      author: {
+        connect: {
+          id: authorId,
+        },
+      },
       category: {
         connect: {
           id: this.category,
