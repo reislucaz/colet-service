@@ -12,8 +12,15 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async registerUser(data: RegisterUserDto) {
-    if (!data.validate()) {
+  async registerUser(data: Record<string, any>) {
+    const registerDto = new RegisterUserDto(
+      data.name,
+      data.email,
+      data.password,
+      data.confirmPassword,
+    );
+
+    if (!registerDto.validate()) {
       return null;
     }
 
@@ -29,7 +36,7 @@ export class AuthService {
       .createUser({
         name: data.name,
         email: data.email,
-        passwordHash: data.passwordHash,
+        passwordHash: registerDto.passwordHash,
       })
       .then(({ id }) => ({ id }));
   }

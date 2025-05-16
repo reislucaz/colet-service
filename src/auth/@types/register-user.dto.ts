@@ -5,6 +5,7 @@ export class RegisterUserDto {
     public readonly name: string,
     public readonly email: string,
     private readonly password: string,
+    private readonly confirmPassword: string,
   ) {}
 
   get passwordHash() {
@@ -12,6 +13,12 @@ export class RegisterUserDto {
   }
 
   validate(): boolean {
-    return this.name && this.email && this.password ? true : false;
+    return (
+      this.name &&
+      this.email &&
+      this.password &&
+      this.confirmPassword &&
+      this.password === this.confirmPassword
+    );
   }
 }

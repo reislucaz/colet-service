@@ -1,6 +1,5 @@
 import { Body, Controller, Post, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { RegisterUserDto } from './@types/register-user.dto';
 import { Public } from 'src/utils/decorators/public';
 
 @Controller('auth')
@@ -10,12 +9,12 @@ export class AuthController {
   @Public()
   @Post('register')
   async registerUser(@Body() data: Record<string, any>) {
-    const register = await this.authService.registerUser(
-      new RegisterUserDto(data.name, data.email, data.password),
-    );
+    const register = await this.authService.registerUser(data);
 
     if (!register) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException(
+        'Invalid registration data or email already exists',
+      );
     }
 
     return register;
@@ -30,7 +29,7 @@ export class AuthController {
     );
 
     if (!login) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('Invalid credentials');
     }
 
     return login;
