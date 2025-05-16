@@ -6,6 +6,8 @@ import {
   Post,
   Query,
   Request,
+  DefaultValuePipe,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { CreateChatDto } from './dto/create-chat.dto';
@@ -24,7 +26,10 @@ export class ChatController {
   }
 
   @Get()
-  async getUserChats(@Request() req, @Query('page') page: number = 1) {
+  async getUserChats(
+    @Request() req,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+  ) {
     return await this.chatService.getUserChats(req.user.id, page);
   }
 
