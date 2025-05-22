@@ -24,7 +24,7 @@ export class UserService {
     // Update user with Stripe customer ID
     return this.prisma.user.update({
       where: { id: user.id },
-      data: { stripeCustomerId },
+      data: { id: stripeCustomerId },
     });
   }
 
