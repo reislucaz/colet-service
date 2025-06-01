@@ -1,16 +1,19 @@
+'use server';
 import {
   Body,
   Controller,
   Get,
   Param,
   Post,
+  Put,
   Query,
   Request,
 } from '@nestjs/common';
-import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
-import { Public } from 'src/utils/decorators/public';
+import { ProductService } from './product.service';
 import { ProductQuery } from './query/product-query';
+import { updateProductDTO } from './dto/update-product.dto';
+import { Public } from 'src/utils/decorators/public';
 
 @Controller('products')
 export class ProductController {
@@ -24,7 +27,6 @@ export class ProductController {
   }
 
   @Get()
-  @Public()
   async listProducts(@Query() query: ProductQuery) {
     return await this.productService.listProducts(query);
   }
@@ -38,5 +40,10 @@ export class ProductController {
   @Public()
   async getProduct(@Param('id') id: string) {
     return await this.productService.getProduct(id);
+  }
+
+  @Put('/:id')
+  async updateProduct(@Param('id') id: string, @Body() data: updateProductDTO) {
+    return await this.productService.updateProduct(id, data.toUpdateEntity());
   }
 }
