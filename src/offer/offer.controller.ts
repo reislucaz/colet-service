@@ -1,6 +1,6 @@
-import { Body, Controller, Param, Post, Request } from '@nestjs/common';
-import { OfferService } from './offer.service';
+import { Body, Controller, Get, Param, Post, Request } from '@nestjs/common';
 import { CreateOfferDto } from './dto/create-offer.dto';
+import { OfferService } from './offer.service';
 
 @Controller('offers')
 export class OfferController {
@@ -37,5 +37,10 @@ export class OfferController {
   @Post('/:offerId/confirm-payment')
   async confirmPayment(@Param('offerId') offerId: string) {
     return await this.offerService.confirmPayment(offerId);
+  }
+
+  @Get('/')
+  async getOffersByUser(@Request() req){
+    return await this.offerService.getByUser(req.user.id);
   }
 }

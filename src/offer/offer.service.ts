@@ -1,14 +1,14 @@
 import {
-  Injectable,
-  NotFoundException,
   BadRequestException,
   Inject,
+  Injectable,
+  NotFoundException,
   forwardRef,
 } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
 import { OfferStatus } from '@prisma/client';
-import { StripeService } from '../stripe/stripe.service';
 import { MessageGateway } from 'src/message/message.gateway';
+import { PrismaService } from '../prisma/prisma.service';
+import { StripeService } from '../stripe/stripe.service';
 
 @Injectable()
 export class OfferService {
@@ -308,5 +308,29 @@ export class OfferService {
     this.messageGateway.notifyOfferStatusChange(offer.chatId, updatedOffer);
 
     return updatedOffer;
+  }
+
+  async getByUser(userId: string){
+    const offers = await this.prisma.offer.findMany({where: {
+      OR:[
+        {
+          sender: {
+            id: userId
+          }
+        }, 
+        {
+          recipient: {
+            id: userId
+          }
+        }
+      ],
+    }, include: {sender: {
+      select: {
+        name: true,
+        id: true
+      }
+    }}})
+
+    return offers
   }
 }
