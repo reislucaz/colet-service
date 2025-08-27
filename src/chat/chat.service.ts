@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
 import { User } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
 import { Pagination } from '../utils/pagination';
 
 @Injectable()
@@ -99,9 +99,8 @@ export class ChatService {
           },
           messages: {
             orderBy: {
-              createdAt: 'desc',
+              createdAt: 'asc',
             },
-            take: 1,
           },
         },
       }),
@@ -123,11 +122,6 @@ export class ChatService {
     const chat = await this.prisma.chat.findUnique({
       where: {
         id: chatId,
-        participants: {
-          some: {
-            id: userId,
-          },
-        },
       },
       include: {
         product: {

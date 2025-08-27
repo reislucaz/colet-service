@@ -17,23 +17,80 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
   @SubscribeMessage('message')
   async handleEvent(client: Socket, data: { chatId: string, user: string, text: string }) {
-    const query = client.handshake.query;
-    const chat = query.chatId as string;
-    const from = query.from as string;
-    this.sendMessage(chat, from, data)
-    const { messages } = await this.prisma.chat.findUnique({ where: { id: chat }, select: { messages: true } })
-    const toUser = messages?.[0].toUserId
-    await this.prisma.chat.update({ data: { messages: { create: { text: data.text, fromUserId: from, toUserId: toUser } } }, where: { id: chat } })
+    try {
+      const query = client.handshake.query;
+      const chatId = query.chatId as string;
+      const from = query.from as string;
+      
+      // Enviar mensagem para os clientes conectados
+      this.sendMessage(chatId, from, data);
+      
+      // Buscar informações do chat para determinar o destinatário
+      const chat = await this.prisma.chat.findUnique({ 
+        where: { id: chatId }, 
+        select: { 
+          participants: {
+            select: {
+              id: true
+            }
+          }
+        } 
+      });
+      
+      if (!chat) {
+        this.logger.error(`Chat não encontrado: ${chatId}`);
+        return;
+      }
+      
+      // Determinar o destinatário baseado no remetente
+      const toUser = chat.participants.find(participant => participant.id !== from)?.id;
+      
+      if (!toUser) {
+        this.logger.error(`Destinatário não encontrado no chat ${chatId}`);
+        return;
+      }
+      
+      // Salvar a nova mensagem no histórico (sem deletar mensagens anteriores)
+      await this.prisma.chat.update({
+        data: {
+          messages: {
+            create: {
+              text: data.text,
+              fromUserId: from,
+              toUserId: toUser,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            }
+          }
+        },
+        where: { id: chatId }
+      });
+      
+      this.logger.log(`Mensagem salva no chat ${chatId} de ${from} para ${toUser}`);
+      
+    } catch (error) {
+      this.logger.error(`Erro ao processar mensagem: ${error.message}`);
+    }
   }
 
-  sendMessage(chat: string, user: string, message: any) {
-    const client = this.connections.get(chat)?.get(user);
-    if (!client) {
-      this.logger.error('Client is not connected');
+  sendMessage(chatId: string, fromUser: string, message: any) {
+    const chatConnections = this.connections.get(chatId);
+    if (!chatConnections) {
+      this.logger.error(`Nenhuma conexão encontrada para o chat: ${chatId}`);
       return;
     }
-    client?.emit('message', message);
-    return client.id;
+
+    // Enviar mensagem para todos os clientes conectados no chat
+    chatConnections.forEach((client, userId) => {
+      if (client && client.connected) {
+        client.emit('message', {
+          ...message,
+          fromUser,
+          timestamp: new Date().toISOString()
+        });
+        this.logger.log(`Mensagem enviada para usuário ${userId} no chat ${chatId}`);
+      }
+    });
   }
 
   afterInit() {
