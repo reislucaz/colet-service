@@ -1,14 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
-import { Env } from '../config/env-schema';
 
 @Injectable()
 export class StripeService {
   private stripe: Stripe;
 
-  constructor(private configService: ConfigService<Env>) {
-    this.stripe = new Stripe(this.configService.get('STRIPE_SECRET_KEY'));
+  constructor(private configService: ConfigService) {
+    this.stripe = new Stripe(this.configService.get('stripe.secretKey'), {
+      apiVersion: '2023-10-16',
+    });
   }
 
   async createCustomer(name: string, email: string): Promise<string> {
@@ -27,7 +28,7 @@ export class StripeService {
   ): Promise<Stripe.PaymentIntent> {
     const paymentIntent = await this.stripe.paymentIntents.create({
       amount: Math.round(amount * 100), // Stripe works with cents
-      currency: this.configService.get('STRIPE_CURRENCY'),
+      currency: this.configService.get('stripe.currency'),
       customer: customerId,
       metadata: {
         offerId,
@@ -56,7 +57,7 @@ export class StripeService {
       line_items: [
         {
           price_data: {
-            currency: this.configService.get('STRIPE_CURRENCY'),
+            currency: this.configService.get('stripe.currency'),
             product_data: {
               name: 'Payment for Offer',
             },
@@ -73,7 +74,7 @@ export class StripeService {
   }
 
   constructWebhookEvent(rawBody: Buffer, signature: string): Stripe.Event {
-    const webhookSecret = this.configService.get('STRIPE_WEBHOOK_SECRET');
+    const webhookSecret = this.configService.get('stripe.webhookSecret');
     return this.stripe.webhooks.constructEvent(
       rawBody,
       signature,

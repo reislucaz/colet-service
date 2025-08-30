@@ -1,17 +1,17 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { AuthModule } from './auth/auth.module';
+import { UserModule } from './user/user.module';
+import { PrismaModule } from './prisma/prisma.module';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './auth/auth.guard';
-import { AuthModule } from './auth/auth.module';
 import { CategoryModule } from './category/category.module';
+import { ProductModule } from './product/product.module';
+import { ConfigModule } from '@nestjs/config';
 import { ChatModule } from './chat/chat.module';
-import { envSchema } from './config/env-schema';
 import { MessageModule } from './message/message.module';
 import { OfferModule } from './offer/offer.module';
-import { PrismaModule } from './prisma/prisma.module';
-import { ProductModule } from './product/product.module';
 import { StripeModule } from './stripe/stripe.module';
-import { UserModule } from './user/user.module';
+import stripeConfig from './config/stripe.config';
 
 @Module({
   providers: [
@@ -23,10 +23,7 @@ import { UserModule } from './user/user.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      validate: (config) => {
-        const env = envSchema.parse(config);
-        return env;
-      },
+      load: [stripeConfig],
     }),
     UserModule,
     AuthModule,
