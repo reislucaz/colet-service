@@ -45,14 +45,14 @@ export class ProductService {
   }
 
   async listProducts(query: ProductQuery): Promise<Pagination<Product>> {
-    const { page, limit, q } = query;
+    const { page, limit, search } = query;
     const skip = (page - 1) * limit;
 
-    const where: Prisma.ProductWhereInput = q
+    const where: Prisma.ProductWhereInput = search
       ? {
           OR: [
-            { name: { contains: q, mode: 'insensitive' } },
-            { description: { contains: q, mode: 'insensitive' } },
+            { name: { contains: search, mode: 'insensitive' } },
+            { description: { contains: search, mode: 'insensitive' } },
           ],
         }
       : {};
@@ -96,16 +96,16 @@ export class ProductService {
     userId: string,
     query: ProductQuery,
   ): Promise<Pagination<Product>> {
-    const { page, limit, q } = query;
+    const { page, limit, search } = query;
     const skip = (page - 1) * limit;
-
+    console.log(search);
     const where: Prisma.ProductWhereInput = {
       authorId: userId,
-      ...(q
+      ...(search
         ? {
             OR: [
-              { name: { contains: q, mode: 'insensitive' } },
-              { description: { contains: q, mode: 'insensitive' } },
+              { name: { contains: search, mode: 'insensitive' } },
+              { description: { contains: search, mode: 'insensitive' } },
             ],
           }
         : {}),

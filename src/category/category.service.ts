@@ -28,14 +28,14 @@ export class CategoryService {
   }
 
   async listCategories(query: SearchQuery): Promise<Pagination<Category>> {
-    const { page, limit, q } = query;
+    const { page, limit, search } = query;
     const skip = (page - 1) * limit;
 
-    const where: Prisma.CategoryWhereInput = q
+    const where: Prisma.CategoryWhereInput = search
       ? {
           OR: [
-            { name: { contains: q, mode: 'insensitive' } },
-            { description: { contains: q, mode: 'insensitive' } },
+            { name: { contains: search, mode: 'insensitive' } },
+            { description: { contains: search, mode: 'insensitive' } },
           ],
         }
       : {};

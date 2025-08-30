@@ -6,8 +6,8 @@ export class ProductQuery extends SearchQuery {
   @IsString()
   category?: string;
 
-  constructor(page: number, limit: number, q: string, category?: string) {
-    super(page, limit, q);
+  constructor(page: number, limit: number, search: string, category?: string) {
+    super(page, limit, search);
 
     this.category = category;
   }

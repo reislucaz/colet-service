@@ -13,11 +13,11 @@ export class SearchQuery {
 
   @IsString()
   @IsOptional()
-  q?: string;
+  search?: string;
 
-  constructor(page?: number, limit?: number, q?: string) {
+  constructor(page?: number, limit?: number, search?: string) {
     this.page = page ?? 1;
     this.limit = limit ?? 10;
-    this.q = q;
+    this.search = search;
   }
 }
