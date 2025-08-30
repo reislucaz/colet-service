@@ -150,6 +150,11 @@ export class ProductService {
             iconKey: true,
           },
         },
+        offers: {
+          include:{
+            sender: true
+          }
+        },
         images: true,
         author: {
           select: {

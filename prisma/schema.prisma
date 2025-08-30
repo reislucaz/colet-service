@@ -69,6 +69,7 @@ model Product {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   Chat      Chat[]
+  offers    Offer[]
 }
 
 model Image {
@@ -133,6 +134,9 @@ model Offer {
 
   chat   Chat   @relation(fields: [chatId], references: [id])
   chatId String @map("chat_id")
+
+  product  Product @relation(fields: [productId], references: [id])
+  productId String @map("product_id")
 
   stripePaymentIntentId String? @map("stripe_payment_intent_id")
 

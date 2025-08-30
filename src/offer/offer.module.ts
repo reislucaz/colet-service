@@ -1,9 +1,10 @@
 import { Module, forwardRef } from '@nestjs/common';
-import { OfferService } from './offer.service';
-import { OfferController } from './offer.controller';
+import { MessageModule } from '../message/message.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { StripeModule } from '../stripe/stripe.module';
-import { MessageModule } from '../message/message.module';
+import { OfferController } from './offer.controller';
+import { OfferService } from './offer.service';
+import { CreateOfferUseCase } from './use-cases/create-offer';
 
 @Module({
   imports: [
@@ -12,7 +13,7 @@ import { MessageModule } from '../message/message.module';
     forwardRef(() => MessageModule),
   ],
   controllers: [OfferController],
-  providers: [OfferService],
+  providers: [OfferService, CreateOfferUseCase],
   exports: [OfferService],
 })
 export class OfferModule {}

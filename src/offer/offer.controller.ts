@@ -1,10 +1,14 @@
 import { Body, Controller, Get, Param, Post, Request } from '@nestjs/common';
 import { CreateOfferDto } from './dto/create-offer.dto';
 import { OfferService } from './offer.service';
+import { CreateOfferUseCase } from './use-cases/create-offer';
 
 @Controller('offers')
 export class OfferController {
-  constructor(private readonly offerService: OfferService) {}
+  constructor(
+    private readonly offerService: OfferService,
+    private readonly createOfferUseCase: CreateOfferUseCase,
+  ) {}
 
   @Post('/chat/:chatId')
   async createOffer(
@@ -12,11 +16,12 @@ export class OfferController {
     @Body() createOfferDto: CreateOfferDto,
     @Request() req,
   ) {
-    return await this.offerService.createOffer(
+    return await this.createOfferUseCase.execute({
       chatId,
-      req.user.id,
-      createOfferDto.amount,
-    );
+      userId: req.user.id,
+      amount: createOfferDto.amount,
+      productId: createOfferDto.productId,
+    });
   }
 
   @Post('/:offerId/accept')

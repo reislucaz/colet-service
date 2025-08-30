@@ -23,84 +23,6 @@ export class OfferService {
     this.messageGateway = messageGateway;
   }
 
-  async createOffer(chatId: string, userId: string, amount: number) {
-    // Verify chat exists and user is a participant
-    const chat = await this.prisma.chat.findUnique({
-      where: {
-        id: chatId,
-        participants: {
-          some: {
-            id: userId,
-          },
-        },
-      },
-      include: {
-        participants: true,
-        product: true,
-      },
-    });
-
-    if (!chat) {
-      throw new NotFoundException(
-        'Chat not found or you are not a participant',
-      );
-    }
-
-    // Determine recipient (product owner)
-    const recipient = chat.participants.find(
-      (p) => p.id !== userId && p.id === chat.product.authorId,
-    );
-
-    if (!recipient) {
-      throw new NotFoundException('Product owner not found');
-    }
-
-    // Create the offer
-    const offer = await this.prisma.offer.create({
-      data: {
-        amount,
-        senderId: userId,
-        recipientId: recipient.id,
-        chatId,
-      },
-      include: {
-        sender: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        recipient: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
-    });
-
-    // Create a system message about the offer
-    await this.prisma.message.create({
-      data: {
-        text: `Proposta de compra enviada: R$ ${amount.toFixed(2)}`,
-        fromUserId: userId,
-        toUserId: recipient.id,
-        chatId,
-      },
-    });
-
-    // Update chat updatedAt
-    await this.prisma.chat.update({
-      where: { id: chatId },
-      data: { updatedAt: new Date() },
-    });
-
-    // Notify via websocket
-    this.messageGateway.notifyNewOffer(chatId, offer);
-
-    return offer;
-  }
-
   async acceptOffer(offerId: string, userId: string) {
     const offer = await this.prisma.offer.findUnique({
       where: {
@@ -323,7 +245,7 @@ export class OfferService {
             id: userId
           }
         }
-      ],
+      ]
     }, include: {sender: {
       select: {
         name: true,
