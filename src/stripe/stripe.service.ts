@@ -2,12 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
 import { Env } from '../config/env-schema';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class StripeService {
   private stripe: Stripe;
 
-  constructor(private configService: ConfigService<Env>) {
+  constructor(private configService: ConfigService<Env>, private prisma: PrismaService) {
     this.stripe = new Stripe(this.configService.get('STRIPE_SECRET_KEY'));
   }
 
@@ -44,10 +45,13 @@ export class StripeService {
   }
 
   async createPaymentSession(
-    paymentIntentId: string,
     successUrl: string,
     cancelUrl: string,
+    productId: string,
   ): Promise<string> {
+    const product = await this.prisma.product.findUnique({
+      where: { id: productId },
+    });
     const session = await this.stripe.checkout.sessions.create({
       mode: 'payment',
       success_url: successUrl,
@@ -57,19 +61,17 @@ export class StripeService {
         {
           price_data: {
             currency: this.configService.get('STRIPE_CURRENCY'),
+            unit_amount: product.price,
             product_data: {
-              name: 'Payment for Offer',
+              name: product.name,
+              description: product.description,
             },
-            unit_amount_decimal: (
-              await this.stripe.paymentIntents.retrieve(paymentIntentId)
-            ).amount.toString(),
           },
-          quantity: 1,
         },
       ],
     });
 
-    return session.url;
+    return session.client_secret;
   }
 
   constructWebhookEvent(rawBody: Buffer, signature: string): Stripe.Event {

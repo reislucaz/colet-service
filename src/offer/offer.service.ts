@@ -173,13 +173,13 @@ export class OfferService {
     const successUrl = `${process.env.FRONTEND_URL}/payments/success?offer=${offerId}`;
     const cancelUrl = `${process.env.FRONTEND_URL}/payments/cancel?offer=${offerId}`;
 
-    const checkoutUrl = await this.stripeService.createPaymentSession(
-      paymentIntent.id,
-      successUrl,
-      cancelUrl,
-    );
+    // const checkoutUrl = await this.stripeService.createPaymentSession(
+    //   paymentIntent.id,
+    //   successUrl,
+    //   cancelUrl,
+    // );
 
-    return { checkoutUrl };
+    return {  };
   }
 
   async confirmPayment(offerId: string) {

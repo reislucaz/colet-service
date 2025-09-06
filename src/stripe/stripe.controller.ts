@@ -1,19 +1,20 @@
 import {
+  Body,
   Controller,
+  Headers,
+  HttpException,
+  HttpStatus,
   Post,
   RawBodyRequest,
   Req,
-  Headers,
-  HttpStatus,
-  HttpException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
+import { OfferService } from 'src/offer/offer.service';
 import { Public } from 'src/utils/decorators/public';
 import { StripeService } from './stripe.service';
-import { OfferService } from 'src/offer/offer.service';
 
-@Controller('webhooks')
+@Controller('stripe')
 export class StripeWebhookController {
   constructor(
     private readonly configService: ConfigService,
@@ -22,7 +23,7 @@ export class StripeWebhookController {
   ) {}
 
   @Public()
-  @Post('stripe')
+  @Post('webhooks')
   async handleStripeWebhook(
     @Req() req: RawBodyRequest<Request>,
     @Headers('stripe-signature') signature: string,
@@ -56,5 +57,12 @@ export class StripeWebhookController {
         HttpStatus.BAD_REQUEST,
       );
     }
+  }
+
+  @Post("create-payment-session")
+  async createPaymentSession(@Body() body: { productId: string }) {
+    const successUrl = `${process.env.FRONTEND_URL}/payments/success`;
+    const cancelUrl = `${process.env.FRONTEND_URL}/payments/cancel`;
+    return this.stripeService.createPaymentSession(successUrl, cancelUrl, body.productId);
   }
 }
