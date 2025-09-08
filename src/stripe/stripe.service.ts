@@ -45,32 +45,16 @@ export class StripeService {
   }
 
   async createPaymentSession(
-    successUrl: string,
-    cancelUrl: string,
     productId: string,
   ): Promise<string> {
     const product = await this.prisma.product.findUnique({
       where: { id: productId },
     });
-    const session = await this.stripe.checkout.sessions.create({
-      mode: 'payment',
-      success_url: successUrl,
-      cancel_url: cancelUrl,
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price_data: {
-            currency: this.configService.get('STRIPE_CURRENCY'),
-            unit_amount: product.price,
-            product_data: {
-              name: product.name,
-              description: product.description,
-            },
-          },
-        },
-      ],
+    const session = await this.stripe.paymentIntents.create({
+      amount: (product.price ?? 1) * 100,
+      currency: this.configService.get('STRIPE_CURRENCY'),
+      automatic_payment_methods: { enabled: true },
     });
-
     return session.client_secret;
   }
 

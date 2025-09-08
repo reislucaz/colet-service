@@ -20,7 +20,7 @@ export class StripeWebhookController {
     private readonly configService: ConfigService,
     private readonly stripeService: StripeService,
     private readonly offerService: OfferService,
-  ) {}
+  ) { }
 
   @Public()
   @Post('webhooks')
@@ -63,6 +63,6 @@ export class StripeWebhookController {
   async createPaymentSession(@Body() body: { productId: string }) {
     const successUrl = `${process.env.FRONTEND_URL}/payments/success`;
     const cancelUrl = `${process.env.FRONTEND_URL}/payments/cancel`;
-    return this.stripeService.createPaymentSession(successUrl, cancelUrl, body.productId);
+    return this.stripeService.createPaymentSession(body.productId);
   }
 }
