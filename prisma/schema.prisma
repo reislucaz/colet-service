@@ -23,8 +23,12 @@ model User {
 
   stripeCustomerId String? @map("stripe_customer_id")
 
+  orderSeller Order[] @relation("order_seller")
+  orderPurchaser Order[] @relation("order_purchaser")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+
 }
 
 model Category {
@@ -70,6 +74,8 @@ model Product {
   updatedAt DateTime @updatedAt @map("updated_at")
   Chat      Chat[]
   offers    Offer[]
+
+  order Order[] @relation("order_product")
 }
 
 model Image {
@@ -142,6 +148,36 @@ model Offer {
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+
+  order Order[] @relation("order_offer")
+}
+
+model Order {
+  id String @id @default(cuid())
+
+  status OrderStatus @default(PENDING)
+  amount Float
+
+  seller   User   @relation("order_seller", fields: [sellerId], references: [id])
+  sellerId String @map("seller_id")
+
+  purchaser   User   @relation("order_purchaser", fields: [purchaserId], references: [id])
+  purchaserId String @map("purchaser_id")
+
+  product  Product @relation("order_product", fields: [productId], references: [id])
+  productId String @map("product_id")
+
+  Offer Offer? @relation("order_offer", fields: [offerId], references: [id])
+  offerId String? @map("offer_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  CANCELLED
 }
 
 enum OfferStatus {
