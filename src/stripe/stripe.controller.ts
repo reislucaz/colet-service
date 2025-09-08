@@ -61,8 +61,6 @@ export class StripeWebhookController {
 
   @Post("create-payment-session")
   async createPaymentSession(@Body() body: { productId: string }) {
-    const successUrl = `${process.env.FRONTEND_URL}/payments/success`;
-    const cancelUrl = `${process.env.FRONTEND_URL}/payments/cancel`;
     return this.stripeService.createPaymentSession(body.productId);
   }
 }
