@@ -44,4 +44,10 @@ export class OrderService {
       data,
     });
   }
+
+  async deleteOrder(id: string) {
+    return this.prisma.order.delete({
+      where: { id },
+    });
+  }
 }
