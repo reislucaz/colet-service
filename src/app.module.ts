@@ -8,6 +8,7 @@ import { ChatModule } from './chat/chat.module';
 import { envSchema } from './config/env-schema';
 import { MessageModule } from './message/message.module';
 import { OfferModule } from './offer/offer.module';
+import { Ordermodule } from './order/order.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProductModule } from './product/product.module';
 import { StripeModule } from './stripe/stripe.module';
@@ -37,6 +38,7 @@ import { UserModule } from './user/user.module';
     MessageModule,
     OfferModule,
     StripeModule,
+    Ordermodule
   ],
 })
 export class AppModule {}

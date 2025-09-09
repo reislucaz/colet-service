@@ -7,8 +7,25 @@ export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
   @Post()
-  async createOrder(@Body() data: Prisma.OrderCreateInput) {
-    return this.orderService.createOrder(data);
+  async createOrder(@Body() data: { amount: number, productId: string, purchaserId: string, sellerId: string }) {
+    return this.orderService.createOrder({
+      amount: data.amount,
+      product:{
+        connect:{
+          id: data.productId
+        }
+      },
+      purchaser:{
+        connect:{
+          id: data.purchaserId
+        }
+      },
+      seller:{
+        connect:{
+          id: data.sellerId
+        }
+      },
+    });
   }
 
   @Get('/:id')
