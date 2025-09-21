@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
-import { MessageGateway } from "../../message/message.gateway";
-import { PrismaService } from "../../prisma/prisma.service";
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { MessageGateway } from '../../message/message.gateway';
+import { PrismaService } from '../../prisma/prisma.service';
 
 interface CreateOfferDto {
   chatId: string;
@@ -11,9 +11,12 @@ interface CreateOfferDto {
 
 @Injectable()
 export class CreateOfferUseCase {
-  constructor(private readonly prisma: PrismaService, private readonly messageGateway: MessageGateway) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly messageGateway: MessageGateway,
+  ) {}
 
-  async execute({amount, chatId, productId, userId}: CreateOfferDto) {
+  async execute({ amount, chatId, productId, userId }: CreateOfferDto) {
     const chat = await this.prisma.chat.findUnique({
       where: {
         id: chatId,

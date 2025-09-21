@@ -57,6 +57,34 @@ export class OfferService {
       },
     });
 
+    // Create order to proceed with payment
+    await this.prisma.order.create({
+      data: {
+        amount: offer.amount,
+        Offer: {
+          connect: {
+            id: offerId,
+          },
+        },
+        product: {
+          connect: {
+            id: offer.id,
+          },
+        },
+        status: 'PENDING',
+        seller: {
+          connect: {
+            id: offer.recipient.id,
+          },
+        },
+        purchaser: {
+          connect: {
+            id: offer.sender.id,
+          },
+        },
+      },
+    });
+
     // Create a system message about the acceptance
     await this.prisma.message.create({
       data: {
@@ -169,17 +197,13 @@ export class OfferService {
       data: { stripePaymentIntentId: paymentIntent.id },
     });
 
-    // Create checkout URL
-    const successUrl = `${process.env.FRONTEND_URL}/payments/success?offer=${offerId}`;
-    const cancelUrl = `${process.env.FRONTEND_URL}/payments/cancel?offer=${offerId}`;
-
     // const checkoutUrl = await this.stripeService.createPaymentSession(
     //   paymentIntent.id,
     //   successUrl,
     //   cancelUrl,
     // );
 
-    return {  };
+    return {};
   }
 
   async confirmPayment(offerId: string) {
@@ -232,27 +256,32 @@ export class OfferService {
     return updatedOffer;
   }
 
-  async getByUser(userId: string){
-    const offers = await this.prisma.offer.findMany({where: {
-      OR:[
-        {
-          sender: {
-            id: userId
-          }
-        }, 
-        {
-          recipient: {
-            id: userId
-          }
-        }
-      ]
-    }, include: {sender: {
-      select: {
-        name: true,
-        id: true
-      }
-    }}})
+  async getByUser(userId: string) {
+    const offers = await this.prisma.offer.findMany({
+      where: {
+        OR: [
+          {
+            sender: {
+              id: userId,
+            },
+          },
+          {
+            recipient: {
+              id: userId,
+            },
+          },
+        ],
+      },
+      include: {
+        sender: {
+          select: {
+            name: true,
+            id: true,
+          },
+        },
+      },
+    });
 
-    return offers
+    return offers;
   }
 }

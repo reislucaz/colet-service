@@ -1,55 +1,68 @@
-import { Logger } from "@nestjs/common";
-import { OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit, SubscribeMessage, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
-import { Socket } from "socket.io";
-import { PrismaService } from "src/prisma/prisma.service";
+import { Logger } from '@nestjs/common';
+import {
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+  OnGatewayInit,
+  SubscribeMessage,
+  WebSocketGateway,
+  WebSocketServer,
+} from '@nestjs/websockets';
+import { Socket } from 'socket.io';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @WebSocketGateway()
-export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
-
-  constructor(readonly prisma: PrismaService) { }
+export class ChatGateway
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
+{
+  constructor(readonly prisma: PrismaService) {}
 
   readonly logger = new Logger(ChatGateway.name);
   connections = new Map<string, Map<string, Socket>>();
-  chats = new Map<string, Map<string, Socket>>()
+  chats = new Map<string, Map<string, Socket>>();
 
   @WebSocketServer()
-  server: Socket
+  server: Socket;
 
   @SubscribeMessage('message')
-  async handleEvent(client: Socket, data: { chatId: string, user: string, text: string }) {
+  async handleEvent(
+    client: Socket,
+    data: { chatId: string; user: string; text: string },
+  ) {
     try {
       const query = client.handshake.query;
       const chatId = query.chatId as string;
       const from = query.from as string;
-      
+
       // Enviar mensagem para os clientes conectados
       this.sendMessage(chatId, from, data);
-      
+
       // Buscar informações do chat para determinar o destinatário
-      const chat = await this.prisma.chat.findUnique({ 
-        where: { id: chatId }, 
-        select: { 
+      const chat = await this.prisma.chat.findUnique({
+        where: { id: chatId },
+        select: {
           participants: {
             select: {
-              id: true
-            }
-          }
-        } 
+              id: true,
+            },
+          },
+        },
       });
-      
+
       if (!chat) {
         this.logger.error(`Chat não encontrado: ${chatId}`);
         return;
       }
-      
+
       // Determinar o destinatário baseado no remetente
-      const toUser = chat.participants.find(participant => participant.id !== from)?.id;
-      
+      const toUser = chat.participants.find(
+        (participant) => participant.id !== from,
+      )?.id;
+
       if (!toUser) {
         this.logger.error(`Destinatário não encontrado no chat ${chatId}`);
         return;
       }
-      
+
       // Salvar a nova mensagem no histórico (sem deletar mensagens anteriores)
       await this.prisma.chat.update({
         data: {
@@ -59,15 +72,16 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
               fromUserId: from,
               toUserId: toUser,
               createdAt: new Date(),
-              updatedAt: new Date()
-            }
-          }
+              updatedAt: new Date(),
+            },
+          },
         },
-        where: { id: chatId }
+        where: { id: chatId },
       });
-      
-      this.logger.log(`Mensagem salva no chat ${chatId} de ${from} para ${toUser}`);
-      
+
+      this.logger.log(
+        `Mensagem salva no chat ${chatId} de ${from} para ${toUser}`,
+      );
     } catch (error) {
       this.logger.error(`Erro ao processar mensagem: ${error.message}`);
     }
@@ -86,9 +100,11 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         client.emit('message', {
           ...message,
           fromUser,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
-        this.logger.log(`Mensagem enviada para usuário ${userId} no chat ${chatId}`);
+        this.logger.log(
+          `Mensagem enviada para usuário ${userId} no chat ${chatId}`,
+        );
       }
     });
   }
@@ -112,7 +128,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   }
 
   handleDisconnect(client: Socket) {
-    this.connections.forEach(connection =>
+    this.connections.forEach((connection) =>
       connection.forEach((value, key) => {
         if (value.id === client.id) {
           connection.delete(key);

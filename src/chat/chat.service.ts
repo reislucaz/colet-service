@@ -118,7 +118,7 @@ export class ChatService {
     return new Pagination(chats, total, page, limit);
   }
 
-  async getChatById(chatId: string, userId: string) {
+  async getChatById(chatId: string) {
     const chat = await this.prisma.chat.findUnique({
       where: {
         id: chatId,

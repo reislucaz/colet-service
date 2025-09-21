@@ -34,7 +34,7 @@ export class ChatController {
   }
 
   @Get('/:id')
-  async getChatById(@Param('id') id: string, @Request() req) {
-    return await this.chatService.getChatById(id, req.user.id);
+  async getChatById(@Param('id') id: string) {
+    return await this.chatService.getChatById(id);
   }
 }
