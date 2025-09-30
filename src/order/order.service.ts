@@ -26,7 +26,13 @@ export class OrderService {
   async getOrdersByUserId(userId: string) {
     return this.prisma.order.findMany({
       where: {
-        OR: [{ sellerId: userId }, { purchaserId: userId }],
+        OR: [{ sellerId: userId }, { purchaserId: userId }],  
+      },
+      include: {
+        product: true,
+        Offer: true,
+        seller: true,
+        purchaser: true,
       },
     });
   }
