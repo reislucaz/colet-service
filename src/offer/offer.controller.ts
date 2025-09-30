@@ -24,14 +24,19 @@ export class OfferController {
     });
   }
 
-  @Post('/:offerId/accept')
+  @Post(':offerId/accept')
   async acceptOffer(@Param('offerId') offerId: string, @Request() req) {
     return await this.offerService.acceptOffer(offerId, req.user.id);
   }
 
-  @Post('/:offerId/decline')
+  @Post(':offerId/decline')
   async declineOffer(@Param('offerId') offerId: string, @Request() req) {
     return await this.offerService.declineOffer(offerId, req.user.id);
+  }
+
+  @Get('/chat/:chatId')
+  async getOfferByChat(@Param('chatId') chatId: string) {
+    return await this.offerService.getByChat(chatId);
   }
 
   @Post('/:offerId/pay')

@@ -27,7 +27,6 @@ export class OfferService {
     const offer = await this.prisma.offer.findUnique({
       where: {
         id: offerId,
-        recipientId: userId,
         status: OfferStatus.PENDING,
       },
       include: {
@@ -68,7 +67,7 @@ export class OfferService {
         },
         product: {
           connect: {
-            id: offer.id,
+            id: offer.productId,
           },
         },
         status: 'PENDING',
@@ -283,5 +282,19 @@ export class OfferService {
     });
 
     return offers;
+  }
+
+  async getByChat(chatId: string) {
+    const offer = await this.prisma.offer.findFirst({
+      where: {
+        chatId,
+      },
+    });
+
+    if (!offer) {
+      throw new NotFoundException('Offer not found');
+    }
+
+    return offer;
   }
 }
