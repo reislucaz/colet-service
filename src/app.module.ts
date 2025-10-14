@@ -13,6 +13,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { ProductModule } from './product/product.module';
 import { StripeModule } from './stripe/stripe.module';
 import { UserModule } from './user/user.module';
+import { Walletmodule } from './wallet/wallet.module';
 
 @Module({
   providers: [
@@ -38,7 +39,8 @@ import { UserModule } from './user/user.module';
     MessageModule,
     OfferModule,
     StripeModule,
-    Ordermodule
+    Ordermodule,
+    Walletmodule
   ],
 })
-export class AppModule {}
+export class AppModule { }
