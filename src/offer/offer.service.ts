@@ -288,6 +288,7 @@ export class OfferService {
     const offer = await this.prisma.offer.findFirst({
       where: {
         chatId,
+        status: OfferStatus.PENDING,
       },
     });
 
