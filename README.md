@@ -23,13 +23,7 @@ npm install
 
 ## Variáveis de Ambiente
 
-Crie um arquivo `.env` na raiz do projeto e adicione as variáveis de ambiente conforme o exemplo:
-```bash
-DATABASE_URL=""
-STRIPE_SECRET_KEY=""
-STRIPE_WEBHOOK_SECRET=""
-STRIPE_CURRENCY="brl"
-```
+Crie um arquivo `.env` na raiz do projeto e adicione as variáveis de ambiente conforme o exemplo presente no arquivo `.env.example`.
 
 ## 🚦 Execução
 
