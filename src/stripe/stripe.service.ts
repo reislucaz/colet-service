@@ -38,6 +38,14 @@ export class StripeService {
     return paymentIntent;
   }
 
+  async getBalance(): Promise<Stripe.Balance> {
+    return await this.stripe.balance.retrieve();
+  }
+
+  async getTransactions(): Promise<Stripe.BalanceTransaction[]> {
+    return (await this.stripe.balanceTransactions.list({ currency: this.configService.get('STRIPE_CURRENCY') })).data;
+  }
+
   async confirmPaymentIntent(
     paymentIntentId: string,
   ): Promise<Stripe.PaymentIntent> {
