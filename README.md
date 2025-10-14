@@ -21,18 +21,21 @@ Para instalar as dependências do projeto, execute o comando:
 npm install
 ```
 
+## Variáveis de Ambiente
+
+Crie um arquivo `.env` na raiz do projeto e adicione as variáveis de ambiente:
+
+```bash
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432"
+STRIPE_SECRET_KEY="sk_test_51S1p4xLTyDtUS6f2XW7lwSr6V7BUdqnezceD08CqPu5ASJhFcJscrZ9v4t490woyCMaNJbpnRpfvMdKfRreuaOzi00TI2mPTcx"
+STRIPE_WEBHOOK_SECRET="whsec_t065rOVe5tkPA8brb6kYV2QQfsAqwcL4"
+STRIPE_CURRENCY="brl"
+```
+
 ## 🚦 Execução
 
 Para executar o projeto, execute o comando:
 
 ```bash
 npm run start:dev
-```
-
-## 🎯 Testes
-
-Para executar os testes fim a fim do projeto, execute o comando:
-
-```bash
-npm run test:e2e
 ```
