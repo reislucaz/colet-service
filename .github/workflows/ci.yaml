@@ -5,8 +5,8 @@ on:
 
 jobs:
  build:
-  name: "Setup"
-  runs-on: ubuntu
+  name: "Build"
+  runs-on: ubuntu-latest
   steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4
