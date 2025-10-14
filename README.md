@@ -23,12 +23,11 @@ npm install
 
 ## Variáveis de Ambiente
 
-Crie um arquivo `.env` na raiz do projeto e adicione as variáveis de ambiente:
-
+Crie um arquivo `.env` na raiz do projeto e adicione as variáveis de ambiente conforme o exemplo:
 ```bash
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432"
-STRIPE_SECRET_KEY="sk_test_..."
-STRIPE_WEBHOOK_SECRET="whsec_..."
+DATABASE_URL=""
+STRIPE_SECRET_KEY=""
+STRIPE_WEBHOOK_SECRET=""
 STRIPE_CURRENCY="brl"
 ```
 
