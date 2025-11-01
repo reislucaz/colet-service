@@ -58,7 +58,7 @@ model Product {
 
   description String
 
-  price Float?
+  price Float
 
   recurring Boolean @default(false)
 
