@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -7,6 +11,10 @@ export class OrderService {
   constructor(private readonly prisma: PrismaService) {}
 
   async createOrder(data: Prisma.OrderCreateInput) {
+    if (data.amount <= 0) {
+      throw new BadRequestException('Order amount must be greater than zero');
+    }
+
     return this.prisma.order.create({
       data,
     });
@@ -26,7 +34,7 @@ export class OrderService {
   async getOrdersByUserId(userId: string) {
     return this.prisma.order.findMany({
       where: {
-        OR: [{ sellerId: userId }, { purchaserId: userId }],  
+        OR: [{ sellerId: userId }, { purchaserId: userId }],
       },
       include: {
         product: true,

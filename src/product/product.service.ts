@@ -151,9 +151,9 @@ export class ProductService {
           },
         },
         offers: {
-          include:{
-            sender: true
-          }
+          include: {
+            sender: true,
+          },
         },
         images: true,
         author: {
@@ -165,5 +165,39 @@ export class ProductService {
         },
       },
     });
+  }
+
+  async addImages(productId: string, imageKeys: string[]) {
+    const images = imageKeys.map((key) => ({
+      key,
+      productId,
+    }));
+
+    await this.prisma.image.createMany({
+      data: images,
+    });
+
+    return this.prisma.product.findUnique({
+      where: { id: productId },
+      include: {
+        images: true,
+      },
+    });
+  }
+
+  async deleteImage(imageId: string, productId: string) {
+    const image = await this.prisma.image.findUnique({
+      where: { id: imageId },
+    });
+
+    if (!image || image.productId !== productId) {
+      throw new Error('Image not found or does not belong to this product');
+    }
+
+    await this.prisma.image.delete({
+      where: { id: imageId },
+    });
+
+    return image;
   }
 }
