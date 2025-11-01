@@ -5,50 +5,48 @@ describe('Produtos - E2E', () => {
   const setup = new TestSetup();
   let authToken: string;
   let authToken2: string;
-  let userId: string;
-  let userId2: string;
   let productId: string;
+
+  const firstUser = {
+    name: 'Test User',
+    email: 'test@example.com',
+    password: 'senha123',
+    confirmPassword: 'senha123',
+  };
+
+  const secondUser = {
+    name: 'Second User',
+    email: 'second@example.com',
+    password: 'senha123',
+    confirmPassword: 'senha123',
+  };
 
   beforeAll(async () => {
     await setup.init();
     await setup.cleanDatabase();
     await setup.createTestCategory();
 
-    // Criar usuário 1
-    const user1 = await request(setup.app.getHttpServer())
+    await request(setup.app.getHttpServer())
       .post('/api/auth/register')
-      .send({
-        name: 'Test User',
-        email: 'test@example.com',
-        password: 'senha123',
-        confirmPassword: 'senha123',
-      });
-    userId = user1.body.id;
+      .send(firstUser);
 
     const login1 = await request(setup.app.getHttpServer())
       .post('/api/auth/login')
       .send({
-        email: 'test@example.com',
-        password: 'senha123',
+        email: firstUser.email,
+        password: firstUser.password,
       });
     authToken = login1.body.access_token;
 
-    // Criar usuário 2
-    const user2 = await request(setup.app.getHttpServer())
+    await request(setup.app.getHttpServer())
       .post('/api/auth/register')
-      .send({
-        name: 'Second User',
-        email: 'second@example.com',
-        password: 'senha123',
-        confirmPassword: 'senha123',
-      });
-    userId2 = user2.body.id;
+      .send(secondUser);
 
     const login2 = await request(setup.app.getHttpServer())
       .post('/api/auth/login')
       .send({
-        email: 'second@example.com',
-        password: 'senha123',
+        email: secondUser.email,
+        password: secondUser.password,
       });
     authToken2 = login2.body.access_token;
   });
@@ -182,4 +180,3 @@ describe('Produtos - E2E', () => {
     });
   });
 });
-

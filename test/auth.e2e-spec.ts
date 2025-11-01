@@ -3,8 +3,6 @@ import { TestSetup } from './helpers/test-setup';
 
 describe('Autenticação - E2E', () => {
   const setup = new TestSetup();
-  let authToken: string;
-  let userId: string;
 
   beforeAll(async () => {
     await setup.init();
@@ -28,7 +26,6 @@ describe('Autenticação - E2E', () => {
 
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty('id');
-      userId = response.body.id;
     });
 
     it('não deve registrar usuário com email duplicado', async () => {
@@ -69,7 +66,6 @@ describe('Autenticação - E2E', () => {
 
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty('access_token');
-      authToken = response.body.access_token;
     });
 
     it('não deve fazer login com senha incorreta', async () => {

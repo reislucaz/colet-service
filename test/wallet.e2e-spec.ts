@@ -5,24 +5,28 @@ describe('Wallet e Segurança - E2E', () => {
   const setup = new TestSetup();
   let authToken: string;
 
+  const testUser = {
+    name: 'Test User',
+    email: 'test@example.com',
+    password: 'senha123',
+    confirmPassword: 'senha123',
+  };
+
   beforeAll(async () => {
     await setup.init();
     await setup.cleanDatabase();
 
-    // Criar usuário
-    await request(setup.app.getHttpServer()).post('/api/auth/register').send({
-      name: 'Test User',
-      email: 'test@example.com',
-      password: 'senha123',
-      confirmPassword: 'senha123',
-    });
+    await request(setup.app.getHttpServer())
+      .post('/api/auth/register')
+      .send(testUser);
 
     const login = await request(setup.app.getHttpServer())
       .post('/api/auth/login')
       .send({
-        email: 'test@example.com',
-        password: 'senha123',
+        email: testUser.email,
+        password: testUser.password,
       });
+
     authToken = login.body.access_token;
   });
 
@@ -69,4 +73,3 @@ describe('Wallet e Segurança - E2E', () => {
     });
   });
 });
-

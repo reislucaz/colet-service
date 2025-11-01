@@ -10,71 +10,77 @@ describe('Pedidos (Orders) - E2E', () => {
   let productId: string;
   let orderId: string;
 
+  const sellerUser = {
+    name: 'Seller User',
+    email: 'seller@example.com',
+    password: 'senha123',
+    confirmPassword: 'senha123',
+  };
+
+  const buyerUser = {
+    name: 'Buyer User',
+    email: 'buyer@example.com',
+    password: 'senha123',
+    confirmPassword: 'senha123',
+  };
+
+  const thirdUser = {
+    name: 'Third User',
+    email: 'third@example.com',
+    password: 'senha123',
+    confirmPassword: 'senha123',
+  };
+
+  const testProduct = {
+    name: 'Notebook Dell',
+    description: 'Notebook para reciclagem',
+    price: 250.0,
+    recurring: false,
+    category: 'test-category-id',
+    neighborhood: 'Centro',
+    city: 'São Paulo',
+    state: 'SP',
+  };
+
   beforeAll(async () => {
     await setup.init();
     await setup.cleanDatabase();
     await setup.createTestCategory();
 
-    // Criar usuário 1 (vendedor)
     const user1 = await request(setup.app.getHttpServer())
       .post('/api/auth/register')
-      .send({
-        name: 'Seller User',
-        email: 'seller@example.com',
-        password: 'senha123',
-        confirmPassword: 'senha123',
-      });
+      .send(sellerUser);
     userId = user1.body.id;
 
     const login1 = await request(setup.app.getHttpServer())
       .post('/api/auth/login')
       .send({
-        email: 'seller@example.com',
-        password: 'senha123',
+        email: sellerUser.email,
+        password: sellerUser.password,
       });
     authToken = login1.body.access_token;
 
-    // Criar usuário 2 (comprador)
     const user2 = await request(setup.app.getHttpServer())
       .post('/api/auth/register')
-      .send({
-        name: 'Buyer User',
-        email: 'buyer@example.com',
-        password: 'senha123',
-        confirmPassword: 'senha123',
-      });
+      .send(buyerUser);
     userId2 = user2.body.id;
 
-    // Criar usuário 3 (externo)
-    await request(setup.app.getHttpServer()).post('/api/auth/register').send({
-      name: 'Third User',
-      email: 'third@example.com',
-      password: 'senha123',
-      confirmPassword: 'senha123',
-    });
+    await request(setup.app.getHttpServer())
+      .post('/api/auth/register')
+      .send(thirdUser);
 
     const login3 = await request(setup.app.getHttpServer())
       .post('/api/auth/login')
       .send({
-        email: 'third@example.com',
-        password: 'senha123',
+        email: thirdUser.email,
+        password: thirdUser.password,
       });
     authToken3 = login3.body.access_token;
 
-    // Criar produto
     const product = await request(setup.app.getHttpServer())
       .post('/api/products')
       .set('Authorization', `Bearer ${authToken}`)
-      .send({
-        name: 'Notebook Dell',
-        description: 'Notebook para reciclagem',
-        price: 250.0,
-        recurring: false,
-        category: 'test-category-id',
-        neighborhood: 'Centro',
-        city: 'São Paulo',
-        state: 'SP',
-      });
+      .send(testProduct);
     productId = product.body.id;
   });
 

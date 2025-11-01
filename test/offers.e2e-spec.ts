@@ -10,63 +10,67 @@ describe('Ofertas e Validações - E2E', () => {
   let chatId: string;
   let offerId: string;
 
+  const sellerUser = {
+    name: 'Seller User',
+    email: 'seller@example.com',
+    password: 'senha123',
+    confirmPassword: 'senha123',
+  };
+
+  const buyerUser = {
+    name: 'Buyer User',
+    email: 'buyer@example.com',
+    password: 'senha123',
+    confirmPassword: 'senha123',
+  };
+
+  const testProduct = {
+    name: 'Notebook Dell',
+    description: 'Notebook para reciclagem',
+    price: 250.0,
+    recurring: false,
+    category: 'test-category-id',
+    neighborhood: 'Centro',
+    city: 'São Paulo',
+    state: 'SP',
+  };
+
   beforeAll(async () => {
     await setup.init();
     await setup.cleanDatabase();
     await setup.createTestCategory();
 
-    // Criar usuário 1 (vendedor)
     const user1 = await request(setup.app.getHttpServer())
       .post('/api/auth/register')
-      .send({
-        name: 'Seller User',
-        email: 'seller@example.com',
-        password: 'senha123',
-        confirmPassword: 'senha123',
-      });
+      .send(sellerUser);
     userId = user1.body.id;
 
     const login1 = await request(setup.app.getHttpServer())
       .post('/api/auth/login')
       .send({
-        email: 'seller@example.com',
-        password: 'senha123',
+        email: sellerUser.email,
+        password: sellerUser.password,
       });
     authToken = login1.body.access_token;
 
-    // Criar usuário 2 (comprador)
-    await request(setup.app.getHttpServer()).post('/api/auth/register').send({
-      name: 'Buyer User',
-      email: 'buyer@example.com',
-      password: 'senha123',
-      confirmPassword: 'senha123',
-    });
+    await request(setup.app.getHttpServer())
+      .post('/api/auth/register')
+      .send(buyerUser);
 
     const login2 = await request(setup.app.getHttpServer())
       .post('/api/auth/login')
       .send({
-        email: 'buyer@example.com',
-        password: 'senha123',
+        email: buyerUser.email,
+        password: buyerUser.password,
       });
     authToken2 = login2.body.access_token;
 
-    // Criar produto
     const product = await request(setup.app.getHttpServer())
       .post('/api/products')
       .set('Authorization', `Bearer ${authToken}`)
-      .send({
-        name: 'Notebook Dell',
-        description: 'Notebook para reciclagem',
-        price: 250.0,
-        recurring: false,
-        category: 'test-category-id',
-        neighborhood: 'Centro',
-        city: 'São Paulo',
-        state: 'SP',
-      });
+      .send(testProduct);
     productId = product.body.id;
 
-    // Criar chat
     const chat = await request(setup.app.getHttpServer())
       .post('/api/chats')
       .set('Authorization', `Bearer ${authToken2}`)

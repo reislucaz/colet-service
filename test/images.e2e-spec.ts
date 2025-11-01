@@ -10,65 +10,69 @@ describe('Upload de Imagens - E2E', () => {
   let productId: string;
   let imageId: string;
 
+  const firstUser = {
+    name: 'Test User',
+    email: 'test@example.com',
+    password: 'senha123',
+    confirmPassword: 'senha123',
+  };
+
+  const secondUser = {
+    name: 'Second User',
+    email: 'second@example.com',
+    password: 'senha123',
+    confirmPassword: 'senha123',
+  };
+
+  const testProduct = {
+    name: 'Notebook Dell',
+    description: 'Notebook para reciclagem',
+    price: 250.0,
+    recurring: false,
+    category: 'test-category-id',
+    neighborhood: 'Centro',
+    city: 'São Paulo',
+    state: 'SP',
+  };
+
   beforeAll(async () => {
     await setup.init();
     await setup.cleanDatabase();
     await setup.createTestCategory();
 
-    // Criar pasta de uploads
     const uploadsPath = path.join(process.cwd(), 'uploads', 'products');
     if (!fs.existsSync(uploadsPath)) {
       fs.mkdirSync(uploadsPath, { recursive: true });
     }
 
-    // Criar usuário 1
-    const user1 = await request(setup.app.getHttpServer())
+    await request(setup.app.getHttpServer())
       .post('/api/auth/register')
-      .send({
-        name: 'Test User',
-        email: 'test@example.com',
-        password: 'senha123',
-        confirmPassword: 'senha123',
-      });
+      .send(firstUser);
 
     const login1 = await request(setup.app.getHttpServer())
       .post('/api/auth/login')
       .send({
-        email: 'test@example.com',
-        password: 'senha123',
+        email: firstUser.email,
+        password: firstUser.password,
       });
     authToken = login1.body.access_token;
 
-    // Criar usuário 2
-    await request(setup.app.getHttpServer()).post('/api/auth/register').send({
-      name: 'Second User',
-      email: 'second@example.com',
-      password: 'senha123',
-      confirmPassword: 'senha123',
-    });
+    await request(setup.app.getHttpServer())
+      .post('/api/auth/register')
+      .send(secondUser);
 
     const login2 = await request(setup.app.getHttpServer())
       .post('/api/auth/login')
       .send({
-        email: 'second@example.com',
-        password: 'senha123',
+        email: secondUser.email,
+        password: secondUser.password,
       });
     authToken2 = login2.body.access_token;
 
-    // Criar produto para testes
     const product = await request(setup.app.getHttpServer())
       .post('/api/products')
       .set('Authorization', `Bearer ${authToken}`)
-      .send({
-        name: 'Notebook Dell',
-        description: 'Notebook para reciclagem',
-        price: 250.0,
-        recurring: false,
-        category: 'test-category-id',
-        neighborhood: 'Centro',
-        city: 'São Paulo',
-        state: 'SP',
-      });
+      .send(testProduct);
     productId = product.body.id;
   });
 
@@ -165,4 +169,3 @@ describe('Upload de Imagens - E2E', () => {
     });
   });
 });
-

@@ -41,17 +41,8 @@ export class TestSetup {
   }
 
   async cleanup(): Promise<void> {
-    // Limpar dados de teste
-    await this.prisma.order.deleteMany();
-    await this.prisma.offer.deleteMany();
-    await this.prisma.message.deleteMany();
-    await this.prisma.chat.deleteMany();
-    await this.prisma.image.deleteMany();
-    await this.prisma.product.deleteMany();
-    await this.prisma.category.deleteMany();
-    await this.prisma.user.deleteMany();
+    await this.cleanDatabase();
 
-    // Limpar uploads de teste
     const uploadsPath = path.join(process.cwd(), 'uploads', 'products');
     if (fs.existsSync(uploadsPath)) {
       fs.rmSync(uploadsPath, { recursive: true, force: true });
@@ -83,4 +74,3 @@ export class TestSetup {
     await this.prisma.user.deleteMany();
   }
 }
-
