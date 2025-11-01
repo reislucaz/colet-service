@@ -6,21 +6,21 @@ import {
   forwardRef,
 } from '@nestjs/common';
 import { OfferStatus } from '@prisma/client';
-import { MessageGateway } from 'src/message/message.gateway';
+import { ChatGateway } from 'src/chat/chat.gateway';
 import { PrismaService } from '../prisma/prisma.service';
 import { StripeService } from '../stripe/stripe.service';
 
 @Injectable()
 export class OfferService {
-  private messageGateway: MessageGateway;
+  private chatGateway: ChatGateway;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly stripeService: StripeService,
-    @Inject(forwardRef(() => MessageGateway))
-    messageGateway: MessageGateway,
+    @Inject(forwardRef(() => ChatGateway))
+    chatGateway: ChatGateway,
   ) {
-    this.messageGateway = messageGateway;
+    this.chatGateway = chatGateway;
   }
 
   async acceptOffer(offerId: string, userId: string) {
@@ -95,7 +95,7 @@ export class OfferService {
     });
 
     // Notify via websocket
-    this.messageGateway.notifyOfferStatusChange(offer.chatId, updatedOffer);
+    this.chatGateway.notifyOfferStatusChange(offer.chatId, updatedOffer);
 
     return updatedOffer;
   }
@@ -139,7 +139,7 @@ export class OfferService {
     });
 
     // Notify via websocket
-    this.messageGateway.notifyOfferStatusChange(offer.chatId, updatedOffer);
+    this.chatGateway.notifyOfferStatusChange(offer.chatId, updatedOffer);
 
     return updatedOffer;
   }
@@ -250,7 +250,7 @@ export class OfferService {
     });
 
     // Notify via websocket
-    this.messageGateway.notifyOfferStatusChange(offer.chatId, updatedOffer);
+    this.chatGateway.notifyOfferStatusChange(offer.chatId, updatedOffer);
 
     return updatedOffer;
   }
