@@ -8,7 +8,6 @@ export class ChatService {
   constructor(private readonly prisma: PrismaService) {}
 
   async createChat(productId: string, userId: string, sellerId: string) {
-    // Check if chat already exists between these users for this product
     const existingChat = await this.prisma.chat.findFirst({
       where: {
         productId,
@@ -118,7 +117,7 @@ export class ChatService {
     return new Pagination(chats, total, page, limit);
   }
 
-  async getChatById(chatId: string) {
+  async getChatById(chatId: string, userId?: string) {
     const chat = await this.prisma.chat.findUnique({
       where: {
         id: chatId,
@@ -168,6 +167,15 @@ export class ChatService {
 
     if (!chat) {
       throw new NotFoundException('Chat not found');
+    }
+
+    if (userId) {
+      const isParticipant = chat.participants.some((p) => p.id === userId);
+      if (!isParticipant) {
+        throw new NotFoundException(
+          'Chat not found or you are not a participant',
+        );
+      }
     }
 
     return chat;
