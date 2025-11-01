@@ -27,19 +27,26 @@ export class updateProductDTO {
   state?: string;
 
   toUpdateEntity(): Prisma.ProductUpdateInput {
-    return {
-      name: this.name,
-      description: this.description,
-      price: this.price,
-      recurring: this.recurring,
-      neighborhood: this.neighborhood,
-      city: this.city,
-      state: this.state,
-      category: {
+    const updateData: Prisma.ProductUpdateInput = {};
+
+    if (this.name !== undefined) updateData.name = this.name;
+    if (this.description !== undefined)
+      updateData.description = this.description;
+    if (this.price !== undefined) updateData.price = this.price;
+    if (this.recurring !== undefined) updateData.recurring = this.recurring;
+    if (this.neighborhood !== undefined)
+      updateData.neighborhood = this.neighborhood;
+    if (this.city !== undefined) updateData.city = this.city;
+    if (this.state !== undefined) updateData.state = this.state;
+
+    if (this.category !== undefined) {
+      updateData.category = {
         connect: {
           id: this.category,
         },
-      },
-    };
+      };
+    }
+
+    return updateData;
   }
 }

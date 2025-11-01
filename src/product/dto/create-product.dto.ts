@@ -24,9 +24,13 @@ export class CreateProductDto {
   })
   description: string;
 
-  @Min(0)
-  @IsOptional()
-  price?: number;
+  @Min(0.01, {
+    message: 'Preço deve ser maior que zero',
+  })
+  @IsNotEmpty({
+    message: 'Preço é obrigatório',
+  })
+  price: number;
 
   @IsBoolean()
   @IsOptional()
