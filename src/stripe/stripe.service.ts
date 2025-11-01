@@ -30,7 +30,7 @@ export class StripeService {
     offerId: string,
   ): Promise<Stripe.PaymentIntent> {
     const paymentIntent = await this.stripe.paymentIntents.create({
-      amount: Math.round(amount * 100), // Stripe works with cents
+      amount: Math.round(amount * 100),
       currency: this.configService.get('STRIPE_CURRENCY'),
       customer: customerId,
       metadata: {

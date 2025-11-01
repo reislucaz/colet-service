@@ -3,10 +3,9 @@ import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class MessageService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async sendMessage(chatId: string, userId: string, text: string) {
-    // Get chat to validate user is a participant and to find recipient
     const chat = await this.prisma.chat.findUnique({
       where: {
         id: chatId,
@@ -27,14 +26,12 @@ export class MessageService {
       );
     }
 
-    // Find the recipient (the other user in the chat)
     const recipient = chat.participants.find((p) => p.id !== userId);
 
     if (!recipient) {
       throw new NotFoundException('Recipient not found');
     }
 
-    // Create message
     const message = await this.prisma.message.create({
       data: {
         text,
@@ -52,7 +49,6 @@ export class MessageService {
       },
     });
 
-    // Update chat updatedAt
     await this.prisma.chat.update({
       where: { id: chatId },
       data: { updatedAt: new Date() },

@@ -23,8 +23,8 @@ export class OfferService {
     this.chatGateway = chatGateway;
   }
 
-  async acceptOffer(offerId: string, userId: string) {
-    const offer = await this.prisma.offer.findUnique({
+  private async findPendingOfferWithDetails(offerId: string) {
+    return this.prisma.offer.findUnique({
       where: {
         id: offerId,
         status: OfferStatus.PENDING,
@@ -39,25 +39,21 @@ export class OfferService {
         recipient: true,
       },
     });
+  }
 
-    if (!offer) {
-      throw new NotFoundException(
-        'Offer not found, already processed, or you are not the recipient',
-      );
-    }
-
-    // Update offer status
-    const updatedOffer = await this.prisma.offer.update({
+  private async updateOfferStatus(offerId: string, status: OfferStatus) {
+    return this.prisma.offer.update({
       where: {
         id: offerId,
       },
       data: {
-        status: OfferStatus.ACCEPTED,
+        status,
       },
     });
+  }
 
-    // Create order to proceed with payment
-    await this.prisma.order.create({
+  private async createOrderFromOffer(offer: any, offerId: string) {
+    return this.prisma.order.create({
       data: {
         amount: offer.amount,
         Offer: {
@@ -83,25 +79,55 @@ export class OfferService {
         },
       },
     });
+  }
 
-    // Create a system message about the acceptance
-    await this.prisma.message.create({
+  private async createSystemMessage(
+    text: string,
+    fromUserId: string,
+    toUserId: string,
+    chatId: string,
+  ) {
+    return this.prisma.message.create({
       data: {
-        text: `Proposta de R$ ${offer.amount.toFixed(2)} foi aceita. Aguardando pagamento.`,
-        fromUserId: userId,
-        toUserId: offer.senderId,
-        chatId: offer.chatId,
+        text,
+        fromUserId,
+        toUserId,
+        chatId,
       },
     });
+  }
 
-    // Notify via websocket
+  async acceptOffer(offerId: string, userId: string) {
+    const offer = await this.findPendingOfferWithDetails(offerId);
+
+    if (!offer) {
+      throw new NotFoundException(
+        'Offer not found, already processed, or you are not the recipient',
+      );
+    }
+
+    const updatedOffer = await this.updateOfferStatus(
+      offerId,
+      OfferStatus.ACCEPTED,
+    );
+
+    await this.createOrderFromOffer(offer, offerId);
+
+    const acceptanceMessage = `Proposta de R$ ${offer.amount.toFixed(2)} foi aceita. Aguardando pagamento.`;
+    await this.createSystemMessage(
+      acceptanceMessage,
+      userId,
+      offer.senderId,
+      offer.chatId,
+    );
+
     this.chatGateway.notifyOfferStatusChange(offer.chatId, updatedOffer);
 
     return updatedOffer;
   }
 
-  async declineOffer(offerId: string, userId: string) {
-    const offer = await this.prisma.offer.findUnique({
+  private async findOfferByRecipient(offerId: string, userId: string) {
+    return this.prisma.offer.findUnique({
       where: {
         id: offerId,
         recipientId: userId,
@@ -111,6 +137,10 @@ export class OfferService {
         sender: true,
       },
     });
+  }
+
+  async declineOffer(offerId: string, userId: string) {
+    const offer = await this.findOfferByRecipient(offerId, userId);
 
     if (!offer) {
       throw new NotFoundException(
@@ -118,34 +148,26 @@ export class OfferService {
       );
     }
 
-    // Update offer status
-    const updatedOffer = await this.prisma.offer.update({
-      where: {
-        id: offerId,
-      },
-      data: {
-        status: OfferStatus.DECLINED,
-      },
-    });
+    const updatedOffer = await this.updateOfferStatus(
+      offerId,
+      OfferStatus.DECLINED,
+    );
 
-    // Create a system message about the decline
-    await this.prisma.message.create({
-      data: {
-        text: `Proposta de R$ ${offer.amount.toFixed(2)} foi recusada.`,
-        fromUserId: userId,
-        toUserId: offer.senderId,
-        chatId: offer.chatId,
-      },
-    });
+    const declineMessage = `Proposta de R$ ${offer.amount.toFixed(2)} foi recusada.`;
+    await this.createSystemMessage(
+      declineMessage,
+      userId,
+      offer.senderId,
+      offer.chatId,
+    );
 
-    // Notify via websocket
     this.chatGateway.notifyOfferStatusChange(offer.chatId, updatedOffer);
 
     return updatedOffer;
   }
 
-  async initiatePayment(offerId: string, userId: string) {
-    const offer = await this.prisma.offer.findUnique({
+  private async findAcceptedOfferBySender(offerId: string, userId: string) {
+    return this.prisma.offer.findUnique({
       where: {
         id: offerId,
         senderId: userId,
@@ -161,6 +183,52 @@ export class OfferService {
         },
       },
     });
+  }
+
+  private async ensureStripeCustomer(
+    userId: string,
+    userName: string,
+    userEmail: string,
+    currentCustomerId?: string,
+  ): Promise<string> {
+    if (currentCustomerId) {
+      return currentCustomerId;
+    }
+
+    const customerId = await this.stripeService.createCustomer(
+      userName,
+      userEmail,
+    );
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { stripeCustomerId: customerId },
+    });
+
+    return customerId;
+  }
+
+  private async createAndLinkPaymentIntent(
+    offerId: string,
+    amount: number,
+    customerId: string,
+  ) {
+    const paymentIntent = await this.stripeService.createPaymentIntent(
+      amount,
+      customerId,
+      offerId,
+    );
+
+    await this.prisma.offer.update({
+      where: { id: offerId },
+      data: { stripePaymentIntentId: paymentIntent.id },
+    });
+
+    return paymentIntent;
+  }
+
+  async initiatePayment(offerId: string, userId: string) {
+    const offer = await this.findAcceptedOfferBySender(offerId, userId);
 
     if (!offer) {
       throw new NotFoundException(
@@ -168,45 +236,24 @@ export class OfferService {
       );
     }
 
-    // Ensure sender has a Stripe customer ID
-    if (!offer.sender.stripeCustomerId) {
-      const customerId = await this.stripeService.createCustomer(
-        offer.sender.name,
-        offer.sender.email,
-      );
-
-      await this.prisma.user.update({
-        where: { id: userId },
-        data: { stripeCustomerId: customerId },
-      });
-
-      offer.sender.stripeCustomerId = customerId;
-    }
-
-    // Create payment intent
-    const paymentIntent = await this.stripeService.createPaymentIntent(
-      offer.amount,
+    const stripeCustomerId = await this.ensureStripeCustomer(
+      userId,
+      offer.sender.name,
+      offer.sender.email,
       offer.sender.stripeCustomerId,
-      offerId,
     );
 
-    // Update offer with payment intent ID
-    await this.prisma.offer.update({
-      where: { id: offerId },
-      data: { stripePaymentIntentId: paymentIntent.id },
-    });
-
-    // const checkoutUrl = await this.stripeService.createPaymentSession(
-    //   paymentIntent.id,
-    //   successUrl,
-    //   cancelUrl,
-    // );
+    await this.createAndLinkPaymentIntent(
+      offerId,
+      offer.amount,
+      stripeCustomerId,
+    );
 
     return {};
   }
 
-  async confirmPayment(offerId: string) {
-    const offer = await this.prisma.offer.findUnique({
+  private async findOfferReadyForPayment(offerId: string) {
+    return this.prisma.offer.findUnique({
       where: {
         id: offerId,
         status: OfferStatus.ACCEPTED,
@@ -217,39 +264,43 @@ export class OfferService {
         recipient: true,
       },
     });
+  }
 
-    if (!offer) {
-      throw new NotFoundException('Offer not found or not ready for payment');
-    }
-
-    // Check payment status with Stripe
-    const paymentIntent = await this.stripeService.confirmPaymentIntent(
-      offer.stripePaymentIntentId,
-    );
+  private async verifyPaymentSuccess(paymentIntentId: string) {
+    const paymentIntent =
+      await this.stripeService.confirmPaymentIntent(paymentIntentId);
 
     if (paymentIntent.status !== 'succeeded') {
       throw new BadRequestException('Payment has not been completed yet');
     }
 
-    // Update offer status to PAID
-    const updatedOffer = await this.prisma.offer.update({
-      where: { id: offerId },
-      data: { status: OfferStatus.PAID },
-    });
+    return paymentIntent;
+  }
 
-    // Create a system message about the payment
-    await this.prisma.message.create({
-      data: {
-        text: `Pagamento de R$ ${offer.amount.toFixed(
-          2,
-        )} foi confirmado. Agora vocês podem combinar a entrega.`,
-        fromUserId: offer.senderId,
-        toUserId: offer.recipientId,
-        chatId: offer.chatId,
-      },
-    });
+  async confirmPayment(offerId: string) {
+    const offer = await this.findOfferReadyForPayment(offerId);
 
-    // Notify via websocket
+    if (!offer) {
+      throw new NotFoundException('Offer not found or not ready for payment');
+    }
+
+    await this.verifyPaymentSuccess(offer.stripePaymentIntentId);
+
+    const updatedOffer = await this.updateOfferStatus(
+      offerId,
+      OfferStatus.PAID,
+    );
+
+    const paymentMessage = `Pagamento de R$ ${offer.amount.toFixed(
+      2,
+    )} foi confirmado. Agora vocês podem combinar a entrega.`;
+    await this.createSystemMessage(
+      paymentMessage,
+      offer.senderId,
+      offer.recipientId,
+      offer.chatId,
+    );
+
     this.chatGateway.notifyOfferStatusChange(offer.chatId, updatedOffer);
 
     return updatedOffer;

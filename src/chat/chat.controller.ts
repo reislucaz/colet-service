@@ -14,7 +14,7 @@ import { CreateChatDto } from './dto/create-chat.dto';
 
 @Controller('chats')
 export class ChatController {
-  constructor(private readonly chatService: ChatService) { }
+  constructor(private readonly chatService: ChatService) {}
 
   @Post()
   async createChat(@Body() createChatDto: CreateChatDto, @Request() req) {

@@ -20,7 +20,7 @@ export class StripeWebhookController {
     private readonly configService: ConfigService,
     private readonly stripeService: StripeService,
     private readonly offerService: OfferService,
-  ) { }
+  ) {}
 
   @Public()
   @Post('webhooks')
@@ -59,7 +59,7 @@ export class StripeWebhookController {
     }
   }
 
-  @Post("create-payment-session")
+  @Post('create-payment-session')
   async createPaymentSession(@Body() body: { productId: string }) {
     return this.stripeService.createPaymentSession(body.productId);
   }

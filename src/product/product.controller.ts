@@ -1,4 +1,3 @@
-'use server';
 import {
   BadRequestException,
   Body,
@@ -27,7 +26,7 @@ import { ProductQuery } from './query/product-query';
 
 @Controller('products')
 export class ProductController {
-  constructor(private readonly productService: ProductService) { }
+  constructor(private readonly productService: ProductService) {}
 
   @Post()
   async createProduct(@Body() data: CreateProductDto, @Request() req) {
@@ -81,7 +80,6 @@ export class ProductController {
             productId,
           );
 
-          // Create directory if it doesn't exist
           if (!fs.existsSync(uploadPath)) {
             fs.mkdirSync(uploadPath, { recursive: true });
           }
@@ -107,7 +105,7 @@ export class ProductController {
         cb(null, true);
       },
       limits: {
-        fileSize: 5 * 1024 * 1024, // 5MB
+        fileSize: 5 * 1024 * 1024,
       },
     }),
   )
@@ -159,7 +157,6 @@ export class ProductController {
 
     const image = await this.productService.deleteImage(imageId, productId);
 
-    // Delete physical file
     const filePath = join(process.cwd(), image.key);
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);

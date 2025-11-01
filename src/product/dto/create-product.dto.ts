@@ -44,7 +44,6 @@ export class CreateProductDto {
   })
   category: string;
 
-  //  endereço
   @IsString({
     message: 'Bairro deve ser um texto',
   })

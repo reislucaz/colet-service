@@ -18,13 +18,13 @@ export class CreateOfferUseCase {
   constructor(
     private readonly prisma: PrismaService,
     private readonly chatGateway: ChatGateway,
-  ) { }
+  ) {}
 
   async execute({ amount, chatId, productId, userId }: CreateOfferDto) {
-    // Validate amount
     if (amount <= 0) {
       throw new BadRequestException('Offer amount must be greater than zero');
     }
+
     const chat = await this.prisma.chat.findUnique({
       where: {
         id: chatId,
@@ -46,7 +46,6 @@ export class CreateOfferUseCase {
       );
     }
 
-    // Determine recipient (product owner)
     const recipient = chat.participants.find(
       (p) => p.id !== userId && p.id === chat.product.authorId,
     );
@@ -60,18 +59,17 @@ export class CreateOfferUseCase {
         id: productId,
       },
     });
+
     if (!product) {
       throw new NotFoundException('Product not found');
     }
 
-    // Validate user is not making offer to themselves
     if (product.authorId === userId) {
       throw new BadRequestException(
         'You cannot make an offer to your own product',
       );
     }
 
-    // Create the offer
     const offer = await this.prisma.offer.create({
       data: {
         amount,
@@ -96,7 +94,6 @@ export class CreateOfferUseCase {
       },
     });
 
-    // Create a system message about the offer
     await this.prisma.message.create({
       data: {
         text: `Proposta de compra enviada: R$ ${amount.toFixed(2)}`,
@@ -106,13 +103,11 @@ export class CreateOfferUseCase {
       },
     });
 
-    // Update chat updatedAt
     await this.prisma.chat.update({
       where: { id: chatId },
       data: { updatedAt: new Date() },
     });
 
-    // Notify via websocket
     this.chatGateway.notifyNewOffer(chatId, offer);
 
     return offer;

@@ -15,13 +15,11 @@ export class UserService {
       data,
     });
 
-    // Create Stripe customer
     const stripeCustomerId = await this.stripeService.createCustomer(
       user.name,
       user.email,
     );
 
-    // Update user with Stripe customer ID
     return this.prisma.user.update({
       where: { id: user.id },
       data: { id: stripeCustomerId },

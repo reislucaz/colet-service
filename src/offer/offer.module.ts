@@ -16,4 +16,4 @@ import { CreateOfferUseCase } from './use-cases/create-offer';
   providers: [OfferService, CreateOfferUseCase],
   exports: [OfferService],
 })
-export class OfferModule { }
+export class OfferModule {}

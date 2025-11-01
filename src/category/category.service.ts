@@ -8,37 +8,46 @@ import { SearchQuery } from 'src/utils/search-query';
 export class CategoryService {
   constructor(private readonly prisma: PrismaService) {}
 
+  private buildSearchWhereClause(search?: string): Prisma.CategoryWhereInput {
+    if (!search) {
+      return {};
+    }
+
+    return {
+      OR: [
+        { name: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+      ],
+    };
+  }
+
+  private calculateSkip(page: number, limit: number): number {
+    return (page - 1) * limit;
+  }
+
   async createCategory(data: Prisma.CategoryCreateInput) {
     return this.prisma.category.create({
       data,
     });
   }
 
-  async updateCategory(anId: string, data: Prisma.CategoryUpdateInput) {
+  async updateCategory(categoryId: string, data: Prisma.CategoryUpdateInput) {
     return this.prisma.category.update({
-      where: { id: anId },
+      where: { id: categoryId },
       data,
     });
   }
 
-  async deleteCategory(anId: string) {
+  async deleteCategory(categoryId: string) {
     return this.prisma.category.delete({
-      where: { id: anId },
+      where: { id: categoryId },
     });
   }
 
   async listCategories(query: SearchQuery): Promise<Pagination<Category>> {
     const { page, limit, search } = query;
-    const skip = (page - 1) * limit;
-
-    const where: Prisma.CategoryWhereInput = search
-      ? {
-          OR: [
-            { name: { contains: search, mode: 'insensitive' } },
-            { description: { contains: search, mode: 'insensitive' } },
-          ],
-        }
-      : {};
+    const skip = this.calculateSkip(page, limit);
+    const where = this.buildSearchWhereClause(search);
 
     const [categories, total] = await Promise.all([
       this.prisma.category.findMany({

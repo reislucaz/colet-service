@@ -51,7 +51,6 @@ export class ChatGateway
         return;
       }
 
-      // Determinar o destinatário baseado no remetente
       const toUser = chat.participants.find(
         (participant) => participant.id !== from,
       )?.id;
@@ -61,7 +60,6 @@ export class ChatGateway
         return;
       }
 
-      // Salvar a nova mensagem no histórico (sem deletar mensagens anteriores)
       await this.prisma.chat.update({
         data: {
           messages: {

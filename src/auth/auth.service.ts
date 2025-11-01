@@ -10,7 +10,7 @@ export class AuthService {
   constructor(
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
-  ) { }
+  ) {}
 
   async registerUser(data: Record<string, any>) {
     const registerDto = new RegisterUserDto(

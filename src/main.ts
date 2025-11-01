@@ -13,17 +13,13 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
 
-  // Setup raw body parsing for Stripe webhooks
   app.use('/api/webhooks/stripe', express.raw({ type: 'application/json' }));
 
-  // Parse JSON for other routes
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
-  // Serve static files from uploads directory
   app.use('/uploads', express.static(join(process.cwd(), 'uploads')));
 
-  // Use WebSockets
   app.useWebSocketAdapter(new IoAdapter(app));
 
   app.useGlobalPipes(
@@ -46,7 +42,6 @@ async function bootstrap() {
 
   SwaggerModule.setup('docs', app, documentFactory);
 
-  // Enable CORS for both REST and WebSockets
   app.enableCors({
     origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],

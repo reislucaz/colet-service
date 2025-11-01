@@ -15,7 +15,7 @@ export class AuthGuard implements CanActivate {
     private jwtService: JwtService,
     private readonly reflector: Reflector,
     private readonly prisma: PrismaService,
-  ) { }
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();

@@ -16,24 +16,31 @@ import { OrderService } from './order.service';
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
-  @Post()
-  async createOrder(
-    @Body()
-    data: {
-      amount: number;
-      productId: string;
-      purchaserId: string;
-      sellerId: string;
-    },
-    @Request() req,
-  ) {
-    if (req.user.id !== data.purchaserId && req.user.id !== data.sellerId) {
+  private validateOrderParticipant(order: any, userId: string): void {
+    if (order.sellerId !== userId && order.purchaserId !== userId) {
+      throw new ForbiddenException('You can only access your own orders');
+    }
+  }
+
+  private validateCreateOrderParticipant(
+    userId: string,
+    purchaserId: string,
+    sellerId: string,
+  ): void {
+    if (userId !== purchaserId && userId !== sellerId) {
       throw new ForbiddenException(
         'You can only create orders where you are a participant',
       );
     }
+  }
 
-    return this.orderService.createOrder({
+  private buildOrderCreateInput(data: {
+    amount: number;
+    productId: string;
+    purchaserId: string;
+    sellerId: string;
+  }): Prisma.OrderCreateInput {
+    return {
       amount: data.amount,
       product: {
         connect: {
@@ -50,17 +57,34 @@ export class OrderController {
           id: data.sellerId,
         },
       },
-    });
+    };
+  }
+
+  @Post()
+  async createOrder(
+    @Body()
+    data: {
+      amount: number;
+      productId: string;
+      purchaserId: string;
+      sellerId: string;
+    },
+    @Request() req,
+  ) {
+    this.validateCreateOrderParticipant(
+      req.user.id,
+      data.purchaserId,
+      data.sellerId,
+    );
+
+    const orderInput = this.buildOrderCreateInput(data);
+    return this.orderService.createOrder(orderInput);
   }
 
   @Get('/:id')
   async getOrderById(@Param('id') id: string, @Request() req) {
     const order = await this.orderService.getOrderById(id);
-
-    if (order.sellerId !== req.user.id && order.purchaserId !== req.user.id) {
-      throw new ForbiddenException('You can only view your own orders');
-    }
-
+    this.validateOrderParticipant(order, req.user.id);
     return order;
   }
 
@@ -76,22 +100,14 @@ export class OrderController {
     @Request() req,
   ) {
     const order = await this.orderService.getOrderById(id);
-
-    if (order.sellerId !== req.user.id && order.purchaserId !== req.user.id) {
-      throw new ForbiddenException('You can only update your own orders');
-    }
-
+    this.validateOrderParticipant(order, req.user.id);
     return this.orderService.updateOrder(id, data);
   }
 
   @Delete('/:id')
   async deleteOrder(@Param('id') id: string, @Request() req) {
     const order = await this.orderService.getOrderById(id);
-
-    if (order.sellerId !== req.user.id && order.purchaserId !== req.user.id) {
-      throw new ForbiddenException('You can only delete your own orders');
-    }
-
+    this.validateOrderParticipant(order, req.user.id);
     return this.orderService.deleteOrder(id);
   }
 }
