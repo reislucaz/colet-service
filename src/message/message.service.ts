@@ -1,17 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { MessageGateway } from './message.gateway';
 
 @Injectable()
 export class MessageService {
-  private messageGateway: MessageGateway;
-
-  constructor(private readonly prisma: PrismaService) {}
-
-  // Este método será chamado após a criação de ambas as classes
-  setMessageGateway(gateway: MessageGateway) {
-    this.messageGateway = gateway;
-  }
+  constructor(private readonly prisma: PrismaService) { }
 
   async sendMessage(chatId: string, userId: string, text: string) {
     // Get chat to validate user is a participant and to find recipient
@@ -65,11 +57,6 @@ export class MessageService {
       where: { id: chatId },
       data: { updatedAt: new Date() },
     });
-
-    // Notify via websocket if gateway is available
-    if (this.messageGateway) {
-      this.messageGateway.notifyNewMessage(chatId, message);
-    }
 
     return message;
   }
