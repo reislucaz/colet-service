@@ -1,9 +1,10 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
+import { IoAdapter } from '@nestjs/platform-socket.io';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as express from 'express';
-import { IoAdapter } from '@nestjs/platform-socket.io';
+import { join } from 'path';
+import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -12,14 +13,13 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
 
-  // Setup raw body parsing for Stripe webhooks
   app.use('/api/webhooks/stripe', express.raw({ type: 'application/json' }));
 
-  // Parse JSON for other routes
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
-  // Use WebSockets
+  app.use('/uploads', express.static(join(process.cwd(), 'uploads')));
+
   app.useWebSocketAdapter(new IoAdapter(app));
 
   app.useGlobalPipes(
@@ -42,7 +42,6 @@ async function bootstrap() {
 
   SwaggerModule.setup('docs', app, documentFactory);
 
-  // Enable CORS for both REST and WebSockets
   app.enableCors({
     origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],

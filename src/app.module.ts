@@ -40,7 +40,7 @@ import { Walletmodule } from './wallet/wallet.module';
     OfferModule,
     StripeModule,
     Ordermodule,
-    Walletmodule
+    Walletmodule,
   ],
 })
-export class AppModule { }
+export class AppModule {}

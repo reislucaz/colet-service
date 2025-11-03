@@ -1,5 +1,5 @@
 import { Module, forwardRef } from '@nestjs/common';
-import { MessageModule } from '../message/message.module';
+import { ChatModule } from '../chat/chat.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { StripeModule } from '../stripe/stripe.module';
 import { OfferController } from './offer.controller';
@@ -10,7 +10,7 @@ import { CreateOfferUseCase } from './use-cases/create-offer';
   imports: [
     PrismaModule,
     forwardRef(() => StripeModule),
-    forwardRef(() => MessageModule),
+    forwardRef(() => ChatModule),
   ],
   controllers: [OfferController],
   providers: [OfferService, CreateOfferUseCase],

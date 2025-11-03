@@ -24,9 +24,13 @@ export class CreateProductDto {
   })
   description: string;
 
-  @Min(0)
-  @IsOptional()
-  price?: number;
+  @Min(0.01, {
+    message: 'Preço deve ser maior que zero',
+  })
+  @IsNotEmpty({
+    message: 'Preço é obrigatório',
+  })
+  price: number;
 
   @IsBoolean()
   @IsOptional()
@@ -40,7 +44,6 @@ export class CreateProductDto {
   })
   category: string;
 
-  //  endereço
   @IsString({
     message: 'Bairro deve ser um texto',
   })

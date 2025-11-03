@@ -33,10 +33,8 @@ export class ChatGateway
       const chatId = query.chatId as string;
       const from = query.from as string;
 
-      // Enviar mensagem para os clientes conectados
       this.sendMessage(chatId, from, data);
 
-      // Buscar informações do chat para determinar o destinatário
       const chat = await this.prisma.chat.findUnique({
         where: { id: chatId },
         select: {
@@ -53,7 +51,6 @@ export class ChatGateway
         return;
       }
 
-      // Determinar o destinatário baseado no remetente
       const toUser = chat.participants.find(
         (participant) => participant.id !== from,
       )?.id;
@@ -63,7 +60,6 @@ export class ChatGateway
         return;
       }
 
-      // Salvar a nova mensagem no histórico (sem deletar mensagens anteriores)
       await this.prisma.chat.update({
         data: {
           messages: {
@@ -94,7 +90,6 @@ export class ChatGateway
       return;
     }
 
-    // Enviar mensagem para todos os clientes conectados no chat
     chatConnections.forEach((client, userId) => {
       if (client && client.connected) {
         client.emit('message', {
@@ -136,5 +131,31 @@ export class ChatGateway
       }),
     );
     this.logger.log(`Client disconnected with id: ${client.id}`);
+  }
+
+  notifyNewOffer(chatId: string, offer: any) {
+    const chatConnections = this.connections.get(chatId);
+    if (chatConnections) {
+      chatConnections.forEach((client) => {
+        if (client && client.connected) {
+          client.emit('newOffer', offer);
+        }
+      });
+      this.logger.log(`New offer notification sent to chat: ${chatId}`);
+    }
+  }
+
+  notifyOfferStatusChange(chatId: string, offer: any) {
+    const chatConnections = this.connections.get(chatId);
+    if (chatConnections) {
+      chatConnections.forEach((client) => {
+        if (client && client.connected) {
+          client.emit('offerStatusChanged', offer);
+        }
+      });
+      this.logger.log(
+        `Offer status change notification sent to chat: ${chatId}`,
+      );
+    }
   }
 }

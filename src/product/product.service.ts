@@ -8,54 +8,77 @@ import { ProductQuery } from './query/product-query';
 export class ProductService {
   constructor(private readonly prisma: PrismaService) {}
 
+  private readonly productIncludeOptions = {
+    category: {
+      select: {
+        id: true,
+        name: true,
+        iconKey: true,
+      },
+    },
+    images: true,
+    author: {
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
+    },
+  };
+
+  private readonly categorySelectOptions = {
+    id: true,
+    name: true,
+  };
+
+  private readonly authorSelectOptions = {
+    id: true,
+    name: true,
+    email: true,
+  };
+
+  private buildSearchWhereClause(search?: string): Prisma.ProductWhereInput {
+    if (!search) {
+      return {};
+    }
+
+    return {
+      OR: [
+        { name: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+      ],
+    };
+  }
+
+  private calculateSkip(page: number, limit: number): number {
+    return (page - 1) * limit;
+  }
+
   async createProduct(data: Prisma.ProductCreateInput) {
     return this.prisma.product.create({
       data,
-      include: {
-        category: {
-          select: {
-            id: true,
-            name: true,
-            iconKey: true,
-          },
-        },
-        images: true,
-        author: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
+      include: this.productIncludeOptions,
     });
   }
 
-  async updateProduct(anId: string, data: Prisma.ProductUpdateInput) {
+  async updateProduct(productId: string, data: Prisma.ProductUpdateInput) {
     return this.prisma.product.update({
-      where: { id: anId },
+      where: { id: productId },
       data,
     });
   }
 
-  async deleteProduct(anId: string) {
+  async deleteProduct(productId: string) {
     return this.prisma.product.delete({
-      where: { id: anId },
+      where: { id: productId },
     });
   }
 
   async listProducts(query: ProductQuery): Promise<Pagination<Product>> {
     const { page, limit, search } = query;
-    const skip = (page - 1) * limit;
+    const skip = this.calculateSkip(page, limit);
 
-    const where: Prisma.ProductWhereInput = search
-      ? {
-          OR: [
-            { name: { contains: search, mode: 'insensitive' } },
-            { description: { contains: search, mode: 'insensitive' } },
-          ],
-        }
-      : {};
+    const where: Prisma.ProductWhereInput = this.buildSearchWhereClause(search);
 
     if (query.category) {
       where.categoryId = query.category;
@@ -71,18 +94,11 @@ export class ProductService {
         take: limit,
         include: {
           category: {
-            select: {
-              id: true,
-              name: true,
-            },
+            select: this.categorySelectOptions,
           },
           images: true,
           author: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
+            select: this.authorSelectOptions,
           },
         },
       }),
@@ -97,18 +113,11 @@ export class ProductService {
     query: ProductQuery,
   ): Promise<Pagination<Product>> {
     const { page, limit, search } = query;
-    const skip = (page - 1) * limit;
-    console.log(search);
+    const skip = this.calculateSkip(page, limit);
+
     const where: Prisma.ProductWhereInput = {
       authorId: userId,
-      ...(search
-        ? {
-            OR: [
-              { name: { contains: search, mode: 'insensitive' } },
-              { description: { contains: search, mode: 'insensitive' } },
-            ],
-          }
-        : {}),
+      ...this.buildSearchWhereClause(search),
     };
 
     if (query.category) {
@@ -125,10 +134,7 @@ export class ProductService {
         take: limit,
         include: {
           category: {
-            select: {
-              id: true,
-              name: true,
-            },
+            select: this.categorySelectOptions,
           },
           images: true,
         },
@@ -139,31 +145,51 @@ export class ProductService {
     return new Pagination(products, total, page, limit);
   }
 
-  async getProduct(anId: string) {
+  async getProduct(productId: string) {
     return this.prisma.product.findUnique({
-      where: { id: anId },
+      where: { id: productId },
       include: {
-        category: {
-          select: {
-            id: true,
-            name: true,
-            iconKey: true,
-          },
-        },
+        ...this.productIncludeOptions,
         offers: {
-          include:{
-            sender: true
-          }
-        },
-        images: true,
-        author: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
+          include: {
+            sender: true,
           },
         },
       },
     });
+  }
+
+  async addImages(productId: string, imageKeys: string[]) {
+    const images = imageKeys.map((key) => ({
+      key,
+      productId,
+    }));
+
+    await this.prisma.image.createMany({
+      data: images,
+    });
+
+    return this.prisma.product.findUnique({
+      where: { id: productId },
+      include: {
+        images: true,
+      },
+    });
+  }
+
+  async deleteImage(imageId: string, productId: string) {
+    const image = await this.prisma.image.findUnique({
+      where: { id: imageId },
+    });
+
+    if (!image || image.productId !== productId) {
+      throw new Error('Image not found or does not belong to this product');
+    }
+
+    await this.prisma.image.delete({
+      where: { id: imageId },
+    });
+
+    return image;
   }
 }

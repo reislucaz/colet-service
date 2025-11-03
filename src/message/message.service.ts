@@ -1,20 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { MessageGateway } from './message.gateway';
 
 @Injectable()
 export class MessageService {
-  private messageGateway: MessageGateway;
-
   constructor(private readonly prisma: PrismaService) {}
 
-  // Este método será chamado após a criação de ambas as classes
-  setMessageGateway(gateway: MessageGateway) {
-    this.messageGateway = gateway;
-  }
-
   async sendMessage(chatId: string, userId: string, text: string) {
-    // Get chat to validate user is a participant and to find recipient
     const chat = await this.prisma.chat.findUnique({
       where: {
         id: chatId,
@@ -35,14 +26,12 @@ export class MessageService {
       );
     }
 
-    // Find the recipient (the other user in the chat)
     const recipient = chat.participants.find((p) => p.id !== userId);
 
     if (!recipient) {
       throw new NotFoundException('Recipient not found');
     }
 
-    // Create message
     const message = await this.prisma.message.create({
       data: {
         text,
@@ -60,16 +49,10 @@ export class MessageService {
       },
     });
 
-    // Update chat updatedAt
     await this.prisma.chat.update({
       where: { id: chatId },
       data: { updatedAt: new Date() },
     });
-
-    // Notify via websocket if gateway is available
-    if (this.messageGateway) {
-      this.messageGateway.notifyNewMessage(chatId, message);
-    }
 
     return message;
   }

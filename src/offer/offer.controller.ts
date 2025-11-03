@@ -50,7 +50,7 @@ export class OfferController {
   }
 
   @Get('/')
-  async getOffersByUser(@Request() req){
+  async getOffersByUser(@Request() req) {
     return await this.offerService.getByUser(req.user.id);
   }
 }
