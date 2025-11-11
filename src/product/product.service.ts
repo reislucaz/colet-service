@@ -84,6 +84,10 @@ export class ProductService {
       where.categoryId = query.category;
     }
 
+    if (query.userId) {
+      where.authorId = query.userId;
+    }
+
     const [products, total] = await Promise.all([
       this.prisma.product.findMany({
         where,
